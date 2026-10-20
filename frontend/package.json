@@ -1,0 +1,9 @@
+{
+  "name": "molbhav-frontend",
+  "private": true,
+  "version": "0.0.0",
+  "scripts": {
+    "lint": "echo \"placeholder: replace with eslint once the app is scaffolded\"",
+    "build": "echo \"placeholder: replace with the real build once the app is scaffolded\""
+  }
+}

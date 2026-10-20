@@ -1,0 +1,43 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.ruff_cache/
+.ipynb_checkpoints/
+*.egg-info/
+# Node
+node_modules/
+dist/
+build/
+.next/
+npm-debug.log*
+# Secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+# Data (raw/private) - keep only READMEs
+data/raw/
+data/interviews/
+data/private/
+data/*.csv
+data/*.xlsx
+data/*.zip
+# Model binaries
+*.pt
+*.pth
+*.onnx
+*.h5
+*.pkl
+*.joblib
+*.ckpt
+*.safetensors
+models/
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
