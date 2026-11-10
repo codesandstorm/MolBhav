@@ -1,0 +1,194 @@
+/* Plain Phase A styles. The design language is Phase A2 (docs/product/03_scope_and_cut_line.md). */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+  font-family: var(--mb-font);
+  color: var(--mb-ink);
+  background: var(--mb-paper);
+  line-height: 1.5;
+}
+header.top,
+main {
+  max-width: 40rem;
+  margin: 0 auto;
+  padding: 1rem;
+}
+header.top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+}
+h1 {
+  margin: 0;
+  font-size: 1.25rem;
+}
+button {
+  font: inherit;
+  padding: 0.6rem 1rem;
+  border-radius: 6px;
+  border: 1px solid var(--mb-ink);
+  background: transparent;
+  color: var(--mb-ink);
+  cursor: pointer;
+  min-height: 44px;
+}
+button.primary {
+  background: var(--mb-ink);
+  color: var(--mb-paper);
+}
+button.danger {
+  border-color: var(--mb-danger);
+  color: var(--mb-danger);
+}
+button.link,
+button.brand {
+  border: none;
+  padding: 0.25rem;
+  text-decoration: underline;
+  min-height: 44px;
+}
+button.brand {
+  text-decoration: none;
+  font-weight: 700;
+  font-size: 1.25rem;
+}
+:focus-visible {
+  outline: 3px solid var(--mb-focus);
+  outline-offset: 2px;
+}
+.field {
+  margin: 1rem 0;
+}
+.field label {
+  display: block;
+  font-weight: 600;
+}
+.input-row {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+input[type='text'] {
+  font: inherit;
+  padding: 0.5rem;
+  border: 1px solid var(--mb-muted);
+  border-radius: 6px;
+  width: 100%;
+  max-width: 16rem;
+  min-height: 44px;
+}
+.hint,
+.note {
+  color: var(--mb-muted);
+  font-size: 0.9rem;
+  margin: 0.15rem 0;
+}
+.error {
+  color: var(--mb-danger);
+  font-weight: 600;
+  margin: 0.25rem 0;
+}
+fieldset.choice {
+  border: none;
+  padding: 0;
+  margin: 1rem 0;
+}
+fieldset.choice legend {
+  font-weight: 600;
+}
+fieldset.choice label {
+  margin-right: 1rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  min-height: 44px;
+}
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin: 1.25rem 0;
+}
+.ladder {
+  list-style: none;
+  padding: 0;
+  margin: 1rem 0;
+  border-left: 4px solid var(--mb-ink);
+}
+.rung {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--mb-line);
+}
+.rung-title {
+  font-weight: 600;
+}
+.chip {
+  display: inline-block;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  padding: 0.1rem 0.4rem;
+  border-radius: 999px;
+  background: var(--mb-chip);
+  color: var(--mb-ink);
+  vertical-align: middle;
+}
+.short {
+  color: var(--mb-muted);
+  font-size: 0.9rem;
+}
+.trace ol {
+  padding-left: 1.25rem;
+}
+.trace li {
+  margin: 0.4rem 0;
+}
+.warning {
+  background: var(--mb-warn-bg);
+  padding: 0.5rem 0.75rem;
+  border-radius: 6px;
+}
+.example-tag {
+  font-weight: 700;
+  color: var(--mb-muted);
+}
+table.evidence {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: 0.95rem;
+}
+table.evidence th,
+table.evidence td {
+  text-align: left;
+  padding: 0.4rem;
+  border-bottom: 1px solid var(--mb-line);
+  vertical-align: top;
+}
+.confirm {
+  border: 1px solid var(--mb-danger);
+  padding: 0.75rem;
+  border-radius: 6px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+}
+.confirm p {
+  flex-basis: 100%;
+  margin: 0;
+}
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation: none !important;
+    transition: none !important;
+  }
+}

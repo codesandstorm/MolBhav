@@ -1,0 +1,140 @@
+# 08 · Experience and brand
+
+Draft v0.1 (solo, no fixed deadline, no user research). Tags: [EVIDENCE: path] · [HYPOTHESIS] · [GAP]. Nothing here has been tested with users; all experience targets are [HYPOTHESIS] until measured in-product with consent ([04_research_integrity.md](04_research_integrity.md) §4).
+
+Two surfaces, two moods (D8 [EVIDENCE: 03_scope_and_cut_line.md]):
+- **Showcase** (public site): immersive, scroll-driven 3D that explains each service. Allowed to be expressive [HYPOTHESIS: design].
+- **App** (the working tool): calm, fast, accessible. No 3D, no scroll effects, no sound. Motion only to show cause and effect (≤200 ms) [HYPOTHESIS: budget].
+
+## 1. Tone of voice
+| Principle | Do | Don't | Tag |
+|---|---|---|---|
+| Calm, like a senior friend | "You can hold ₹45,000 and offer a smaller first milestone." | "Crush your negotiation!" | [HYPOTHESIS] |
+| Numbers with their source | "Floor ₹38,000 · calculated from your costs and hours" | "Your market rate is ₹40k" | [EVIDENCE: 02_service_catalogue.md claim labels] |
+| Options, not orders | "Three ways to reply" | "You should say…" | [EVIDENCE: 02_service_catalogue.md S5] |
+| Honest about uncertainty | "Not sure what they mean. Pick one:" | "AI detected…" | [HYPOTHESIS] |
+| Respectful of the client | "Ask what's fixed in their budget." | anything that mocks or tricks the client | [EVIDENCE: 02_service_catalogue.md "We will NOT provide"] |
+
+**Hinglish** (draft templates only, opt-in, D4 [EVIDENCE: 03_scope_and_cut_line.md]): Roman script, "aap", polite and plain, English for numbers and terms like "milestone" and "advance" [HYPOTHESIS: register chosen by the developer, not tested]. Example template (self-authored): "Budget tight hai, samajh aata hai. ₹45,000 mein poora scope rahega. Agar 50% advance mil jaye to ₹42,000 kar sakte hain." Numbers are always slot-filled from the engine.
+UI microcopy stays in English in V1 [HYPOTHESIS: a Hinglish UI is not planned until users ask via consented feedback].
+
+## 2. First run under 60 seconds
+| Second | Screen | User action | Tag |
+|---|---|---|---|
+| 0–5 | Welcome: one line + two buttons, "Try an example deal" / "Start my deal"; 18+ line | tap | [HYPOTHESIS] |
+| 5–35 | Deal setup (4 fields only): quoted price, unit (fixed/hour/month), days of work, monthly income you need | type 4 numbers | [HYPOTHESIS] |
+| 35–45 | Price ladder appears: floor / target / opening, each with "how we got this" | read | [EVIDENCE: 02_service_catalogue.md S2] |
+| 45–60 | "Got a reply from your client? Paste it." with the on-device line | paste or skip | [EVIDENCE: 07_trust_safety_compliance.md §5] |
+Costs, buffer and timeline are asked later, with defaults shown as USER DECISION, never silently assumed [EVIDENCE: 02_service_catalogue.md S2 "no guessed default"]. Measured target: median first-ladder time < 60 s from opt-in counts [HYPOTHESIS: not measurable without consent].
+
+## 3. Screen inventory (app)
+[HYPOTHESIS: design proposal, not built or tested; applies to every row below unless a row carries its own tag]
+
+| # | Screen | Service | Key elements |
+|---|---|---|---|
+| 1 | Welcome / first run | n/a | 2 buttons, 18+ line, privacy line |
+| 2 | Deals list | S1 | deal cards: client label, quoted ₹, status |
+| 3 | Deal setup | S1 | 4 required fields, "add more detail" |
+| 4 | Price ladder | S2, S3, S7 | 3 rungs, trace expanders, optional benchmark (ESTIMATE, n) |
+| 5 | Client reply | S4b | paste box, on-device line, result chips, manual picker |
+| 6 | Reply options | S5 | 2–3 option cards with reason and numbers |
+| 7 | Draft | S6 | editable text, "copy", template/AI badge |
+| 8 | Evidence panel | S7 | side sheet: every claim with label + source |
+| 9 | Log outcome | S8 | final price, what you got in return |
+| 10 | Debrief | S8 | concessions: conditional vs unconditional, one lesson |
+| 11 | Settings & privacy | S13, S14 | toggles (all off by default), delete everything, contact |
+
+## 4. States
+[HYPOTHESIS: design proposal, not built or tested; applies to every row below unless a row carries its own tag]
+
+| Screen | Empty | Loading | Error | Low confidence |
+|---|---|---|---|---|
+| Deals list | "No deals yet. Start with the one you're quoting now." | n/a (local) | "Couldn't read saved deals on this device. Export what's left?" | n/a |
+| Price ladder | "Add days of work to calculate." (names the missing field) | none: instant, deterministic | "These numbers don't add up: target is below floor. Check costs." | n/a |
+| Client reply | paste box with example placeholder | "Reading on this device…" (< 1 s target [HYPOTHESIS]) | "Couldn't find an amount. Type it:" | "Not sure what they mean. Pick one:" + 3 chips + "something else" |
+| Reply options | "Tell us what they said to see options" | n/a | generic options + reason | options shown with "based on your pick" |
+| Draft | template shown instantly | "Writing a draft…" with "use the template" button | "AI draft unavailable. Here's the template." | n/a |
+| Debrief | "Log how it ended to see your debrief" | n/a | n/a | n/a |
+
+## 5. Trust cues
+[HYPOTHESIS: design proposal, not built or tested; applies to every row below unless a row carries its own tag]
+- A label chip on **every** number: CALCULATION / ESTIMATE / USER DECISION / FACT / RECOMMENDATION; tapping it opens the trace [EVIDENCE: 02_service_catalogue.md S7].
+- A persistent "on this device" lock icon on the paste screen; it changes to "sent to server" only if an opt-in server path is on [EVIDENCE: 07_trust_safety_compliance.md §5].
+- Draft badge: "Template" or "AI draft · numbers checked".
+- Self-authored examples say so: "Example deal (made up)".
+- Scores in the about page always carry "self-authored, directional" and the CI [EVIDENCE: 04_research_integrity.md §5].
+
+## 6. Accessibility (app and showcase)
+Target WCAG 2.2 AA [HYPOTHESIS: standard chosen, not audited]. Rules: full keyboard path through the golden flow; visible focus; labels never by colour alone (rungs carry text "Floor/Target/Opening"); numbers read as words by screen readers with their label ("Floor, 38,000 rupees, calculation"); touch targets ≥ 44 px; `prefers-reduced-motion` respected everywhere; text resizable to 200% without loss. Test: axe-core in CI + one keyboard-only run per phase demo [EVIDENCE: 03_scope_and_cut_line.md Phase D exit].
+
+## 7. Copy deck (key screens)
+[HYPOTHESIS: draft copy, untested with users; every ₹ figure is a made-up example]
+
+| Screen | Element | Copy |
+|---|---|---|
+| Welcome | headline | "Walk into the price talk with a number you can defend." |
+| Welcome | sub | "Calculate your floor, read your client's reply, and choose a counter that trades instead of caves." |
+| Welcome | buttons | "Try an example deal" · "Start my deal" |
+| Setup | field hints | "What did you quote?" · "Per project, hour or month?" · "How many working days?" · "What do you need to earn in a month?" |
+| Setup | monthly need hint | "Before income tax. Prices here exclude GST." [EVIDENCE: docs/product/13_price_ladder_spec.md §2, D-L5; apps/app/src/copy.ts] |
+| Setup | billable capacity helper | "Count only days you can charge for: leave out admin, learning, holidays and slow weeks." (hours version: "Count only hours you can charge for: leave out admin, learning, holidays and slow weeks.") [EVIDENCE: docs/product/13_price_ladder_spec.md §2, D-L1; apps/app/src/copy.ts] |
+| Ladder | rung labels | "Floor: don't go below this" · "Target: what you aim for" · "Opening: where you start" |
+| Ladder | trace | "₹38,000 = (₹90,000 monthly need ÷ 18 working days) × 7 days + ₹3,000 costs" (example; real formula in Phase A spec [GAP]) |
+| Reply | box placeholder | "Paste what your client said" |
+| Reply | privacy line | "Stays on this device. Not sent to us or to any AI service." |
+| Reply | result | "Asking for a lower price · Reason: budget · Mentions ₹30,000 (fixed)" |
+| Options | titles | "Hold the price, add something small" · "Trade: lower price if 50% advance" · "Walk away politely" |
+| Options | floor guard | "This is below your floor of ₹38,000. Go ahead anyway?" (USER DECISION) |
+| Draft | badges | "Template" · "AI draft · numbers checked" |
+| Debrief | summary | "You gave ₹5,000 in total: ₹3,000 in exchange for an advance, ₹2,000 for nothing." |
+| Debrief | lesson | "Next time, ask for something back before lowering the price." |
+| Settings | delete | "Delete everything on this device" → "This can't be undone." |
+
+## 8. Showcase direction
+
+### 8.1 Study of lusion.co (view only)
+[EVIDENCE: direct observation, listed below] Viewed **https://lusion.co/** on **2026-11-10** in an in-app browser, home page only, no assets downloaded, no code copied. Observations [EVIDENCE: observation notes in this file; not a benchmark, the pane is not a controlled device]:
+- A full-screen **preloader gate** with a numeric counter before any content; in our pane it ran for roughly 20 s.
+- One large **hero scene** of physically lit 3D objects filling a rounded frame, with a "scroll to explore" cue; 3 `<canvas>` elements on the page.
+- ~104 network resources at load, including 20 `.buf` geometry files, 38 `.webp` images, 16 `.ogg` audio files, 4 `.mp4` videos and 1 `.exr` environment map (resource-timing count; sizes were hidden cross-origin).
+- Large type; per-letter animated titles; project list with discipline tags; "keep scrolling … next page" that turns the page end into a transition.
+- No `prefers-reduced-motion` rule found in the stylesheets we could read (cross-origin sheets unreadable, so not conclusive).
+
+Principles we take (ideas, not form) [HYPOTHESIS]:
+1. **One object per idea**: each service is a single, physical metaphor you can watch work.
+2. **Scroll is the timeline**: scroll position drives the story of one scene; no autoplay.
+3. **Motion has weight**: easing that feels physical, slow in and settle.
+4. **Few words, large**: one sentence per scene.
+5. **Continuity**: the end of one scene becomes the start of the next.
+
+What we deliberately do differently [HYPOTHESIS]: **no preloader gate** (text and a static poster render first; 3D loads after); **no audio**; reduced-motion and static fallbacks; a hard performance budget for mid/low-end Android; evidence labels in HTML above the canvas, never inside it. We never reuse their layouts, assets, copy or code.
+
+### 8.2 Original showcase: one scene per service
+[HYPOTHESIS: design proposal, not built or tested; applies to every row below unless a row carries its own tag]
+Visual language [HYPOTHESIS: original choices]: warm paper background, ink-blue + turmeric + terracotta accents; materials are matte clay and brass (cheap to render, no reflections or env maps); motifs from Indian everyday trade: the **bahi-khata** (red cloth ledger), brass weights and a balance, an abacus.
+
+| # | Scene | Metaphor and motion | One line of copy | Real data? |
+|---|---|---|---|---|
+| Hero / S2 | **The ladder** (signature) | three brass rungs on a single upright; as you scroll, small weights labelled "rent", "tools", "days" drop into a tray and the **floor** rung rises to match; then target and opening slide up to their heights. Heights are exact ratios from a sample deal computed by the real engine | "Know your floor before they name their price." | yes: engine output for a labelled example deal |
+| S4b | **The message, sorted** | a chat bubble (self-authored Hinglish, labelled "example") breaks into word tiles; tiles fall into three trays: *move*, *reason*, *₹ amount*; "30k" settles as "₹30,000". A glass outline of a phone encloses the trays: it stays on the device | "Read what they really asked for, on your own phone." | yes: rule baseline output |
+| S5 | **The crossroads** | from the bubble, three paths unroll; the middle one carries a balance: a lower price on one pan, "50% advance" on the other, and it levels | "Don't cave. Trade." | yes: planner output |
+| S7 | **The ledger** | a bahi-khata opens; every number from earlier scenes flies in and lands on a line with its label stamped beside it: CALCULATION, ESTIMATE, USER DECISION | "Every number shows its working." | yes |
+| S8 | **The abacus** | beads slide for each concession: turmeric beads (got something back) and grey beads (gave it away); the frame tallies them | "See what you gave away, and what you got." | yes: debrief on the example |
+
+**Signature visual: the ladder.** Three horizontal rungs on one upright, always in the same order bottom-up (Floor · Target · Opening), with proportional spacing and the ₹ value in HTML beside each rung. It is used in the showcase hero, the app's ladder screen (flat 2D version), the favicon (three bars) and demo slides. One shape, every surface [HYPOTHESIS].
+
+### 8.3 Constraints (written down before building)
+| Constraint | Budget / rule | Tag |
+|---|---|---|
+| Device target | a mid/low-end Android phone on a throttled mobile connection (lab profile, e.g. Lighthouse mobile) [HYPOTHESIS: device class; no specific device tested yet] | [GAP: pick a real test device] |
+| Initial page weight | ≤ 300 KB compressed before any 3D (HTML, CSS, fonts, JS) | [HYPOTHESIS: our budget] |
+| 3D per scene | ≤ 1.5 MB compressed (geometry + textures), loaded only when the scene approaches the viewport | [HYPOTHESIS] |
+| Load | readable text + poster image in ≤ 2.5 s (LCP) on the lab profile; Google's "good" LCP threshold is 2.5 s [UNVERIFIED: threshold not fetched this session] | [HYPOTHESIS] |
+| Frame rate | ≥ 30 fps on the low tier, 60 fps target on mid tier; if the measured average drops below 30 fps for 2 s, swap to the static poster | [HYPOTHESIS] |
+| Static fallback | every scene has a poster image + the same copy + the same numbers in HTML; served when WebGL is missing, Save-Data is on, the GPU tier is low, or reduced motion is set | [HYPOTHESIS] |
+| Reduced motion | `prefers-reduced-motion: reduce` → no scroll-linked animation; scenes show their end state | [HYPOTHESIS] |
+| Keyboard | every scene reachable and its content readable by Tab; no scroll-jacking; a "skip to app" link first in the tab order | [HYPOTHESIS] |
+| Evidence labels | labels and ₹ values are **HTML text above the canvas**, never baked into textures, never covered by animation; a test checks they are visible at each scene's end state | [HYPOTHESIS: rule] |
+| No preloader gate, no audio | content first; sound never plays | [HYPOTHESIS] |
+| Separation | showcase and app share the engine and tokens only; the app never imports 3D code | [EVIDENCE: 09_architecture.md §2] |
+| Originality | all models, textures, copy and code made for MolBhav; asset licences recorded | [GAP: asset register not created] |

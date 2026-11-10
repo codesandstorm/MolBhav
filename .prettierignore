@@ -1,0 +1,11 @@
+node_modules
+dist
+.astro
+data
+ml
+docs
+coverage
+playwright-report
+test-results
+package-lock.json
+packages/engine/test/hand_verified.json

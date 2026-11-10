@@ -1,0 +1,12 @@
+/* Mirrors src/index.ts. Phase A placeholder values; replaced in Phase A2. */
+:root {
+  --mb-ink: #1f3a5f;
+  --mb-paper: #faf7f0;
+  --mb-muted: #4d5866;
+  --mb-line: #d9d4c7;
+  --mb-chip: #efe6cf;
+  --mb-focus: #c2410c;
+  --mb-danger: #a3261d;
+  --mb-warn-bg: #fdf0d0;
+  --mb-font: system-ui, -apple-system, 'Segoe UI', Roboto, 'Noto Sans', sans-serif;
+}

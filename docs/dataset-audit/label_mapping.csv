@@ -1,0 +1,78 @@
+source_dataset,source_label,our_label,confidence,notes,source_label_count_COMPUTED
+casino,Submit-Deal,ANCHOR,low,formal deal proposal button; may be first offer or counter,1181
+casino,Accept-Deal,ACCEPT,high,accept button,1005
+casino,Reject-Deal,REJECT_OR_COUNTER,high,reject button,167
+casino,Walk-Away,OTHER,medium,walk-away; no T1 label for BATNA exit,25
+casino,elicit-pref,INFO_REQUEST,high,asks partner's preferences,377
+casino,uv-part,REJECT_OR_COUNTER,medium,undermines partner's need; pushback,131
+casino,no-need,UNCOND_CONCESSION,low,signals an item is not needed; concession only implied,196
+casino,promote-coordination,COND_CONCESSION,low,mutual-benefit framing; conditionality not annotated,579
+casino,self-need,OTHER,medium,own-need justification; closer to objection rationale than a move,964
+casino,other-need,OTHER,medium,third-party need justification,409
+casino,vouch-fair,OTHER,medium,fairness appeal,439
+casino,small-talk,OTHER,high,rapport,1054
+casino,showing-empathy,OTHER,high,rapport,254
+casino,non-strategic,OTHER,high,no strategy,1455
+deal_or_no_dialog,<selection>,UNMAPPABLE,-,end-of-dialogue marker; no utterance labels exist,6314
+craigslist_bargains,init-price,ANCHOR,high,rule-based first price mention,4517
+craigslist_bargains,counter-price,REJECT_OR_COUNTER,high,rule-based new price after opponent price,8066
+craigslist_bargains,insist,REJECT_OR_COUNTER,medium,repeats own price,447
+craigslist_bargains,vague-price,REJECT_OR_COUNTER,low,push without number,412
+craigslist_bargains,inquiry,INFO_REQUEST,high,question,5205
+craigslist_bargains,inform,OTHER,medium,answers/informs,2448
+craigslist_bargains,agree,ACCEPT,medium,verbal agreement; may be partial,1929
+craigslist_bargains,disagree,REJECT_OR_COUNTER,medium,verbal disagreement,2126
+craigslist_bargains,intro,OTHER,high,greeting,4162
+craigslist_bargains,unknown,UNMAPPABLE,-,parser could not classify,9479
+craigslist_bargains,ACTION:offer,ANCHOR,low,formal final-offer submission (may be counter),5760
+craigslist_bargains,ACTION:accept,ACCEPT,high,accept button,5025
+craigslist_bargains,ACTION:reject,REJECT_OR_COUNTER,high,reject button,464
+craigslist_bargains,ACTION:quit,OTHER,medium,walk-away,598
+persuasionforgood,logical-appeal,OTHER,medium,"persuasion strategy, not a bargaining move",321
+persuasionforgood,emotion-appeal,OTHER,medium,persuasion strategy,234
+persuasionforgood,credibility-appeal,OTHER,medium,persuasion strategy,777
+persuasionforgood,foot-in-the-door,ANCHOR,low,asks for a small amount first; reverse anchoring,135
+persuasionforgood,self-modeling,OTHER,medium,persuasion strategy,151
+persuasionforgood,personal-story,OTHER,medium,persuasion strategy,91
+persuasionforgood,donation-information,OTHER,medium,informs about donation procedure,359
+persuasionforgood,source-related-inquiry,INFO_REQUEST,high,question,166
+persuasionforgood,task-related-inquiry,INFO_REQUEST,high,question,369
+persuasionforgood,personal-related-inquiry,INFO_REQUEST,high,question,243
+persuasionforgood,proposition-of-donation,ANCHOR,low,asks for donation; amount often absent,290
+persuasionforgood,comment-partner,OTHER,high,,31
+persuasionforgood,thank,OTHER,high,,380
+persuasionforgood,you-are-welcome,OTHER,high,,47
+persuasionforgood,ask-donate-more,REJECT_OR_COUNTER,low,pushes for higher amount,32
+persuasionforgood,confirm-donation,INFO_REQUEST,medium,confirms amount,74
+persuasionforgood,ask-not-donate-reason,INFO_REQUEST,high,question,7
+persuasionforgood,praise-user,OTHER,high,,158
+persuasionforgood,closing,OTHER,high,,148
+persuasionforgood,greeting,OTHER,high,,462
+persuasionforgood,acknowledgement,OTHER,high,,563
+persuasionforgood,agree-donation,ACCEPT,high,agrees to donate,182
+persuasionforgood,disagree-donation,REJECT_OR_COUNTER,high,refuses,69
+persuasionforgood,disagree-donation-more,REJECT_OR_COUNTER,high,refuses to increase,14
+persuasionforgood,provide-donation-amount,ANCHOR,medium,states an amount,234
+persuasionforgood,negative-reaction-to-donation,REJECT_OR_COUNTER,medium,,152
+persuasionforgood,positive-reaction-to-donation,OTHER,medium,,735
+persuasionforgood,ask-org-info,INFO_REQUEST,high,question,439
+persuasionforgood,ask-donation-procedure,INFO_REQUEST,high,question,158
+persuasionforgood,ask-persuader-donation-intention,INFO_REQUEST,high,question,80
+persuasionforgood,ask-question,INFO_REQUEST,high,question,0
+persuasionforgood,personal-related-inquiry_ee,INFO_REQUEST,high,question,0
+persuasionforgood,positive-to-inquiry,OTHER,high,answer,318
+persuasionforgood,negative-to-inquiry,OTHER,high,answer,172
+persuasionforgood,neutral-to-inquiry,OTHER,high,answer,96
+persuasionforgood,other,OTHER,high,,740
+persuasionforgood,off-task,OTHER,high,,165
+persuasionforgood,neutral-reaction-to-donation,OTHER,medium,,85
+persuasionforgood,ask-donation-amount,INFO_REQUEST,high,asks how much,128
+persuasionforgood,non-personal-Task-related-inquiry,INFO_REQUEST,high,question,2
+cmu_hinglish_dog,(no labels),UNMAPPABLE,-,translation pairs only; no dialogue acts,0
+language_of_bargaining,n (numeric offer),ANCHOR,medium,UNVERIFIED: from card text only; data gated; new number = anchor or counter,
+language_of_bargaining,p (push),REJECT_OR_COUNTER,medium,UNVERIFIED: card text only,
+language_of_bargaining,a (allowance),UNCOND_CONCESSION,medium,UNVERIFIED: card text only; move toward other without number; conditionality via 'External Incentive'=y -> COND_CONCESSION (low),
+language_of_bargaining,c (comparison),OTHER,medium,UNVERIFIED: card text only; external price reference = justification,
+language_of_bargaining,r (repetition),REJECT_OR_COUNTER,low,UNVERIFIED: card text only; repeat of own offer = insist,
+language_of_bargaining,e (end/accept),ACCEPT,high,UNVERIFIED: card text only,
+craigslist_bargains,(derived) price moves toward opponent,UNCOND_CONCESSION / COND_CONCESSION,low,COMPUTED heuristic over metadata.price; COND if 'if you/in exchange' etc.,

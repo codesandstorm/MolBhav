@@ -1,0 +1,13 @@
+[{ "id": "HV01", "input": { "u": "fixed", "eu": "day", "e": 7, "K": 18, "M": 90000, "C": 3000, "b": 0, "t": 20, "a": 15 }, "expected": { "floor": 38000, "target": 45600, "opening": 52500 } },
+{ "id": "HV02", "input": { "u": "fixed", "eu": "day", "e": 5, "K": 20, "M": 60000, "C": 0, "b": 10, "t": 20, "a": 15 }, "expected": { "floor": 16500, "target": 19800, "opening": 22800 } },
+{ "id": "HV03", "input": { "u": "fixed", "eu": "hour", "e": 30, "K": 120, "M": 60000, "C": 2500, "b": 0, "t": 25, "a": 10 }, "expected": { "floor": 17500, "target": 21900, "opening": 24100 } },
+{ "id": "HV04", "input": { "u": "hour", "eu": "hour", "e": 40, "K": 120, "M": 60000, "C": 4000, "b": 15, "t": 20, "a": 15 }, "expected": { "floor": 680, "target": 810, "opening": 940 } },
+{ "id": "HV05", "input": { "u": "hour", "eu": "hour", "e": null, "K": 120, "M": 60000, "C": 0, "b": 15, "t": 20, "a": 15 }, "expected": { "floor": 580, "target": 690, "opening": 800 } },
+{ "id": "HV06", "input": { "u": "month", "eu": "day", "e": 10, "K": 20, "M": 80000, "C": 5000, "b": 0, "t": 20, "a": 15 }, "expected": { "floor": 45000, "target": 54000, "opening": 62100 } },
+{ "id": "HV07", "input": { "u": "fixed", "eu": "day", "e": 3, "K": 22, "M": 75000, "C": 1200, "b": 5, "t": 0, "a": 0 }, "expected": { "floor": 12000, "target": 12000, "opening": 12000 } },
+{ "id": "HV08", "input": { "u": "fixed", "eu": "hour", "e": 7, "K": 100, "M": 33333, "C": 0, "b": 0, "t": 20, "a": 15 }, "expected": { "floor": 2400, "target": 2800, "opening": 3300 } },
+{ "id": "HV09", "input": { "u": "fixed", "eu": "day", "e": 400, "K": 20, "M": 1000000, "C": 0, "b": 0, "t": 20, "a": 15 }, "expected": { "floor": 20000000, "target": 24000000, "opening": 27600000, "warnings": ["unusually_large"] } },
+{ "id": "HV10", "input": { "u": "fixed", "eu": "day", "e": 2.5, "K": 18, "M": 90000, "C": 0, "b": 0, "t": 20, "a": 15 }, "expected": { "floor": 12500, "target": 15000, "opening": 17300 } },
+{ "id": "HV11", "input": { "u": "month", "eu": "day", "e": 25, "K": 20, "M": 90000, "C": 0, "b": 0, "t": 20, "a": 15 }, "expected": {  "error": "e_exceeds_K" } },
+{ "id": "HV12", "input": { "u": "hour", "eu": "hour", "e": null, "K": 120, "M": 60000, "C": 4000, "b": 0, "t": 20, "a": 15 }, "expected": {  "error": "hour_costs_need_e" } },
+{ "id": "HV13", "input": { "u": "fixed", "eu": "day", "e": 7, "K": 18, "M": 90000.5, "C": 0, "b": 0, "t": 20, "a": 15 }, "expected": {  "error": "not_whole_rupees"} }]

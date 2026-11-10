@@ -1,0 +1,40 @@
+{
+  "name": "molbhav",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "lint": "eslint . --max-warnings 0",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "dev": "npm run dev -w apps/app",
+    "test": "npm run test --workspaces --if-present",
+    "test:hand": "npm run test:hand -w packages/engine",
+    "test:e2e": "npm run test:e2e -w apps/app",
+    "build": "npm run build --workspaces --if-present"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "4.14.0",
+    "@eslint/js": "10.0.1",
+    "@playwright/test": "1.65.0",
+    "@testing-library/dom": "10.4.2",
+    "@testing-library/react": "16.3.3",
+    "@types/node": "26.6.6",
+    "eslint": "10.14.0",
+    "eslint-plugin-react-hooks": "7.1.1",
+    "fast-check": "4.10.2",
+    "globals": "17.14.0",
+    "jsdom": "29.1.1",
+    "prettier": "3.9.10",
+    "typescript": "6.0.3",
+    "typescript-eslint": "8.72.2",
+    "vitest": "5.1.0"
+  }
+}

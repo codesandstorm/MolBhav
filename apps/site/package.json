@@ -1,0 +1,17 @@
+{
+  "name": "@molbhav/site",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "typecheck": "astro check"
+  },
+  "dependencies": {
+    "astro": "7.4.10"
+  },
+  "devDependencies": {
+    "@astrojs/check": "0.9.12"
+  }
+}

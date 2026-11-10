@@ -1,0 +1,41 @@
+# Raw/private data never enters git
+data/raw/
+data/private/
+data/interviews/
+*.parquet
+*.arrow
+*.zip
+*.tar.gz
+# tabular/text dataset files anywhere under data/ (licences are non-commercial or unclear)
+data/**/*.csv
+data/**/*.tsv
+data/**/*.json
+data/**/*.jsonl
+data/**/*.txt
+!data/checksums.txt
+*.gz
+.env
+.env.*
+.venv/
+__pycache__/
+*.pyc
+# audit outputs that can contain sampled text
+ml/scripts/audit/_out/
+# JS tooling
+node_modules/
+dist/
+.astro/
+coverage/
+playwright-report/
+test-results/
+*.tsbuildinfo
+# model binaries (weights are never committed; small JSON exports are reviewed case by case)
+*.onnx
+*.safetensors
+*.pt
+*.pth
+*.ckpt
+*.bin
+*.h5
+*.joblib
+*.pkl
