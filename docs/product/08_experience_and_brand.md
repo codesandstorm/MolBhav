@@ -89,6 +89,15 @@ Target WCAG 2.2 AA [HYPOTHESIS: standard chosen, not audited]. Rules: full keybo
 | Debrief | summary | "You gave ₹5,000 in total: ₹3,000 in exchange for an advance, ₹2,000 for nothing." |
 | Debrief | lesson | "Next time, ask for something back before lowering the price." |
 | Settings | delete | "Delete everything on this device" → "This can't be undone." |
+| Showcase hero | eyebrow · headline (italic emphasis) · promise · CTAs | "Price-talk prep for freelancers in India" · "Know your floor *before they name their price.*" · "Your floor, target and opening are calculated from your own inputs. Every number shows its working." (C1, C2) · "Try the price ladder" · "See how it works" [HYPOTHESIS: CTA wording, A2 revision] |
+| Showcase nav | links | "How it works" · "Privacy" · "Try it" (only sections that exist) [HYPOTHESIS: A2 revision] |
+| Showcase example card | label · room line | "A price ladder" · "Example (made up)" · "From the opening you can come down up to {room} and still reach the target." (S1; values from packages/engine at build time) |
+| Showcase story | rung captions | Floor (Stone) "Don’t go below this. The lowest price that still pays what you need to earn for the days this work takes, plus its costs. It is heavy on purpose: you stand on it." · Target (Glass) "What you aim for. Your floor plus a margin. This is the price you hope to settle at, and you can see straight through to how it was made." · Opening (Light) "Where you start. Your target plus room for one or two concessions that still land on target. Say this number first." [HYPOTHESIS: the material sentences are new in the A2 revision] |
+| Showcase "Why MolBhav" | heading · line · four pillars | "Why *MolBhav*" · "Built to be checked, not trusted on faith." · **Exact numbers**: "Money is worked in whole rupees with exact arithmetic, by an engine checked against hand-worked examples." [EVIDENCE: packages/engine BigInt/Rational; packages/engine/test hand_verified.json] · **Every claim labelled**: "Every number shows its working and a label: a calculation, your own decision, or a suggestion you can change." (C1) · **Private on your device**: "Your deals stay on this device. Nothing you type is sent to us." [EVIDENCE: apps/app/e2e/privacy.spec.ts] · **Practise before the call** `Planned`: "Rehearse the price talk against a client who pushes back, before the real one." [HYPOTHESIS: all wording new in the A2 revision] |
+| Showcase "How it works" | three steps | **Prepare**: "Enter the days the work takes, what you need to earn and your costs. Get your floor, target and opening, with the working shown." · **Practise** `Planned`: "Paste your client’s reply and rehearse a counter that trades instead of caves." · **Debrief** `Planned`: "After the deal, see what you gave away and what you got for it." (C11 is KEEP-WHEN Phase D, hence Planned) [HYPOTHESIS: wording new in the A2 revision] |
+| Showcase trust band | heading · three cards | "Private *by default*" · "Stays on your device: the deals you save, in your browser’s own storage, and the app itself." · "Never leaves it: anything you type: names, prices, costs, quotes, and the ladders made from them." · "Delete everything: one button in Settings and privacy removes every deal from this device. It can’t be undone, so the app asks first." [EVIDENCE: apps/app/src/storage.ts; apps/app/e2e/privacy.spec.ts "delete everything"] [HYPOTHESIS: wording] |
+| Showcase honesty lines | example and footer | "Example (made up)" · "Calculated from made-up inputs. This is not a market rate." · "Not legal or tax advice." (T4) · "A solo student project in active development." |
+| App welcome / setup / settings (A2 revision) | new lines | eyebrow "Price-talk prep for freelancers" · setup lede "A few answers give you a ladder. Everything stays on this device." · group titles "The work" / "The money" · settings "What stays on this device" ("The deals you save, in this browser’s own storage." · "The app itself, cached so it opens without a connection.") · "What never leaves it" ("Anything you type: names, prices, costs, quotes." · "Your ladders and the working behind them.") · "Delete everything" [HYPOTHESIS: wording new in the A2 revision; storage facts from apps/app/src/storage.ts and the PWA config in apps/app/vite.config.ts] |
 
 ## 8. Showcase direction
 
@@ -111,6 +120,8 @@ What we deliberately do differently [HYPOTHESIS]: **no preloader gate** (text an
 
 ### 8.2 Original showcase: one scene per service
 [HYPOTHESIS: design proposal, not built or tested; applies to every row below unless a row carries its own tag]
+**Superseded in the A2 revision:** the palette and materials are now the locked v1.0 language in [15_design_language.md](15_design_language.md): dark, cream, peach-copper, and a ladder of stone (floor), glass (target) and light (opening). The paper/ink/brass description below is kept as history.
+
 Visual language [HYPOTHESIS: original choices]: warm paper background, ink-blue + turmeric + terracotta accents; materials are matte clay and brass (cheap to render, no reflections or env maps); motifs from Indian everyday trade: the **bahi-khata** (red cloth ledger), brass weights and a balance, an abacus.
 
 | # | Scene | Metaphor and motion | One line of copy | Real data? |
@@ -137,4 +148,12 @@ Visual language [HYPOTHESIS: original choices]: warm paper background, ink-blue 
 | Evidence labels | labels and ₹ values are **HTML text above the canvas**, never baked into textures, never covered by animation; a test checks they are visible at each scene's end state | [HYPOTHESIS: rule] |
 | No preloader gate, no audio | content first; sound never plays | [HYPOTHESIS] |
 | Separation | showcase and app share the engine and tokens only; the app never imports 3D code | [EVIDENCE: 09_architecture.md §2] |
-| Originality | all models, textures, copy and code made for MolBhav; asset licences recorded | [GAP: asset register not created] |
+| Originality | all models, textures, copy and code made for MolBhav; asset licences recorded | [EVIDENCE: asset and licence register in 15_design_language.md §11; GSAP removed in the A2 revision] |
+| HTML + CSS | ≤ 50 KB compressed for the document and its CSS | approved by the owner (A2 revision) [EVIDENCE: apps/site/budgets.ts] |
+| Hero 3D code | ≤ 350 KB gzip of JavaScript for the hero scene (three, R3F, scene), counted inside the 1.5 MB scene budget | approved by the owner (A2 revision) |
+| Total before interaction (derived) | ≤ initial 300 KB + one scene 1.5 MB | [CALCULATION: sum of the two rows above it in this table] |
+| 3D loading | the 3D chunk downloads only after the first scroll, wheel, touch, pointer press or key press; until then the poster is the picture | owner decision (A2 revision) [EVIDENCE: apps/site/e2e/hero.spec.ts] |
+| CLS | ≤ 0.1, before and after the scene takes over | approved by the owner (A2 revision) |
+| TBT | ≤ 200 ms in the window before the first interaction, on the lab mobile profile | owner decision (A2 revision) |
+| Long tasks after the first scroll | total long-task time in the 3 s after the first scroll, same profile: **≤ 500 ms proposed** (lab, 5 runs on 2026-11-11: min 275 / median 289 / max 303 ms; the 500 ms leaves headroom for slower real phones) | [HYPOTHESIS: proposed from measurements, needs the owner’s approval] |
+| Lab profile (A2) | Playwright + headless Chromium: 360×740, RTT 150 ms, 1.6 Mbps down, CPU 4× slowdown; encoded in apps/site/budgets.ts and e2e/budget.spec.ts | [GAP: not a real low-end Android phone] |

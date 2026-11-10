@@ -1,0 +1,123 @@
+---
+/**
+ * The first frame of the hero, and the picture whenever there is no live scene: before the
+ * first interaction, under reduced motion, without WebGL, with Save-Data, or after a
+ * failure. It draws the same composition as the 3D scene at scroll position 0 (stone slab,
+ * glass rung with a copper rim, rung of light, glass rails, stones), from the same engine
+ * per-mille heights and the same scale (src/lib/choreography.ts). Decorative: the text
+ * beside it carries the story and the numbers.
+ */
+import { LADDER_HEIGHT } from '../lib/choreography.ts';
+import type { HeroRung } from '../lib/example.ts';
+
+interface Props {
+  rungs: HeroRung[];
+}
+const { rungs } = Astro.props;
+
+// one scene unit = UNIT viewBox units; scene y = 0 (the ground) sits at GROUND
+const GROUND = 362;
+const UNIT = 300 / LADDER_HEIGHT;
+const y = (permille: number) => GROUND - (UNIT * LADDER_HEIGHT * permille) / 1000;
+const at = Object.fromEntries(rungs.map((r) => [r.id, y(r.permille)])) as Record<
+  'floor' | 'target' | 'opening',
+  number
+>;
+const HALF = 1.235 * UNIT; // half a rung, caps included
+const RAIL = 1.3 * UNIT;
+---
+
+<svg class="poster" viewBox="0 0 320 400" role="presentation" focusable="false">
+  <defs>
+    <linearGradient id="poster-light" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="var(--mb-color-scene-glow)"></stop>
+      <stop offset="1" stop-color="var(--mb-color-scene-copper)"></stop>
+    </linearGradient>
+    <linearGradient id="poster-glass" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="var(--mb-color-scene-copper)" stop-opacity="0.55"></stop>
+      <stop offset="0.5" stop-color="var(--mb-color-surface-raised)" stop-opacity="0.35"></stop>
+      <stop offset="1" stop-color="var(--mb-color-scene-copper)" stop-opacity="0.3"></stop>
+    </linearGradient>
+    <linearGradient id="poster-stone" x1="0" y1="0" x2="0.3" y2="1">
+      <stop offset="0" stop-color="var(--mb-color-scene-stone)"></stop>
+      <stop offset="1" stop-color="var(--mb-color-surface-raised)"></stop>
+    </linearGradient>
+    <filter id="poster-blur" x="-30%" y="-200%" width="160%" height="500%">
+      <feGaussianBlur stdDeviation="9"></feGaussianBlur>
+    </filter>
+  </defs>
+
+  <!-- warm pool of light on the ground -->
+  <ellipse
+    cx="160"
+    cy={GROUND + 10}
+    rx="150"
+    ry="16"
+    fill="var(--mb-color-scene-copper)"
+    opacity="0.14"
+    filter="url(#poster-blur)"></ellipse>
+
+  <!-- rails: thin glass -->
+  {
+    [160 - RAIL, 160 + RAIL].map((x) => (
+      <rect
+        x={x - 4}
+        y={GROUND - 4.2 * UNIT}
+        width="8"
+        height={4.2 * UNIT}
+        rx="4"
+        fill="var(--mb-color-scene-post)"
+        opacity="0.35"
+      />
+    ))
+  }
+
+  <!-- stones at the foot -->
+  <g fill="url(#poster-stone)" stroke="var(--mb-color-scene-stone)" stroke-width="1">
+    <polygon points="62,370 76,344 104,338 124,352 118,374 80,378"></polygon>
+    <polygon points="150,372 158,340 196,330 226,346 222,374 172,380"></polygon>
+    <polygon points="236,374 244,354 266,352 276,368 266,380"></polygon>
+  </g>
+
+  <!-- floor: a stone slab -->
+  <g data-rung="floor">
+    <polygon
+      points={`${160 - HALF},${at.floor + 4} ${160 - HALF + 14},${at.floor - 13} ${160 + HALF - 10},${at.floor - 15} ${160 + HALF},${at.floor + 2} ${160 + HALF - 16},${at.floor + 15} ${160 - HALF + 10},${at.floor + 14}`}
+      fill="url(#poster-stone)"
+      stroke="var(--mb-color-scene-stone)"
+      stroke-width="1"></polygon>
+  </g>
+
+  <!-- target: glass with a copper rim -->
+  <g data-rung="target">
+    <rect
+      x={160 - HALF}
+      y={at.target - 7}
+      width={HALF * 2}
+      height="14"
+      rx="7"
+      fill="url(#poster-glass)"
+      stroke="var(--mb-color-scene-copper)"
+      stroke-width="1.5"></rect>
+  </g>
+
+  <!-- opening: a rung of light -->
+  <g data-rung="opening">
+    <rect
+      x={160 - HALF - 6}
+      y={at.opening - 16}
+      width={HALF * 2 + 12}
+      height="32"
+      rx="16"
+      fill="var(--mb-color-scene-glow)"
+      opacity="0.45"
+      filter="url(#poster-blur)"></rect>
+    <rect
+      x={160 - HALF}
+      y={at.opening - 7}
+      width={HALF * 2}
+      height="14"
+      rx="7"
+      fill="url(#poster-light)"></rect>
+  </g>
+</svg>

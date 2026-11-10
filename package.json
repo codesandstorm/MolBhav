@@ -17,8 +17,10 @@
     "dev": "npm run dev -w apps/app",
     "test": "npm run test --workspaces --if-present",
     "test:hand": "npm run test:hand -w packages/engine",
-    "test:e2e": "npm run test:e2e -w apps/app",
-    "build": "npm run build --workspaces --if-present"
+    "test:e2e": "npm run test:e2e -w apps/app && npm run test:e2e -w apps/site",
+    "build": "npm run build --workspaces --if-present",
+    "test:budget": "npm run test:budget -w apps/site",
+    "dev:site": "npm run dev -w apps/site"
   },
   "devDependencies": {
     "@axe-core/playwright": "4.14.0",

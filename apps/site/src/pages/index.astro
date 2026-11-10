@@ -1,20 +1,293 @@
 ---
-// Phase A placeholder. No 3D yet: the hero ladder scene is Phase A2.
-const title = 'MolBhav';
+/**
+ * The showcase (Phase A2 revision). Plain HTML carries the whole story and every number; the
+ * 3D ladder is a progressive enhancement that replaces an identical poster after the
+ * visitor's first interaction. Copy: docs/product/08_experience_and_brand.md §7;
+ * claims: 11_claims_register.md C1, C2, S1, T4. Anything not built yet says "Planned".
+ */
+import '@fontsource/ibm-plex-sans/400.css';
+import '@fontsource/ibm-plex-sans/600.css';
+import '@fontsource-variable/fraunces/wght.css';
+import '@fontsource-variable/fraunces/wght-italic.css';
+import '@molbhav/tokens/tokens.css';
+import '../styles/site.css';
+import Poster from '../components/Poster.astro';
+import HeroScene from '../components/HeroScene.tsx';
+import { heroLadder } from '../lib/example.ts';
+
+const appUrl = import.meta.env.PUBLIC_APP_URL ?? '/app/';
+const ladder = heroLadder();
+const permille = Object.fromEntries(ladder.rungs.map((r) => [r.id, r.permille])) as Record<
+  'floor' | 'target' | 'opening',
+  number
+>;
+const byId = Object.fromEntries(ladder.rungs.map((r) => [r.id, r]));
+const roomLine = ladder.noRoom
+  ? 'No room at this price: the opening and target are the same.'
+  : `From the opening you can come down up to ${ladder.roomPct} and still reach the target.`;
+
+const steps = {
+  floor: {
+    title: 'Floor',
+    look: 'Stone',
+    tagline: 'Don’t go below this.',
+    caption:
+      'The lowest price that still pays what you need to earn for the days this work takes, plus its costs. It is heavy on purpose: you stand on it.',
+  },
+  target: {
+    title: 'Target',
+    look: 'Glass',
+    tagline: 'What you aim for.',
+    caption:
+      'Your floor plus a margin. This is the price you hope to settle at, and you can see straight through to how it was made.',
+  },
+  opening: {
+    title: 'Opening',
+    look: 'Light',
+    tagline: 'Where you start.',
+    caption:
+      'Your target plus room for one or two concessions that still land on target. Say this number first.',
+  },
+} as const;
+
+const pillars = [
+  {
+    icon: 'exact',
+    title: 'Exact numbers',
+    text: 'Money is worked in whole rupees with exact arithmetic, by an engine checked against hand-worked examples.',
+    planned: false,
+  },
+  {
+    icon: 'label',
+    title: 'Every claim labelled',
+    text: 'Every number shows its working and a label: a calculation, your own decision, or a suggestion you can change.',
+    planned: false,
+  },
+  {
+    icon: 'device',
+    title: 'Private on your device',
+    text: 'Your deals stay on this device. Nothing you type is sent to us.',
+    planned: false,
+  },
+  {
+    icon: 'practise',
+    title: 'Practise before the call',
+    text: 'Rehearse the price talk against a client who pushes back, before the real one.',
+    planned: true,
+  },
+] as const;
+
+const how = [
+  {
+    title: 'Prepare',
+    text: 'Enter the days the work takes, what you need to earn and your costs. Get your floor, target and opening, with the working shown.',
+    planned: false,
+  },
+  {
+    title: 'Practise',
+    text: 'Paste your client’s reply and rehearse a counter that trades instead of caves.',
+    planned: true,
+  },
+  {
+    title: 'Debrief',
+    text: 'After the deal, see what you gave away and what you got for it.',
+    planned: true,
+  },
+] as const;
 ---
+
 <!doctype html>
 <html lang="en-IN">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="description" content="Price-talk prep for Indian freelancers." />
-    <title>{title}</title>
+    <meta
+      name="description"
+      content="MolBhav calculates your floor, target and opening price from your own costs and hours, before the price talk."
+    />
+    <meta name="color-scheme" content="dark" />
+    <meta name="theme-color" content="#0F0D0E" />
+    <link rel="icon" href="/icon.svg" type="image/svg+xml" />
+    <title>MolBhav: know your floor before they name their price</title>
   </head>
   <body>
-    <main>
-      <h1>{title}</h1>
-      <p>Know your floor before they name their price.</p>
-      <p>The showcase is coming in a later phase. The app works today and keeps your deals on your device.</p>
+    <a class="skip" href="#main">Skip to content</a>
+    <header class="top">
+      <a class="wordmark" href="#main">
+        <span class="mark" aria-hidden="true"><span></span><span></span><span></span></span>
+        <span class="wm-text">MolBhav</span>
+      </a>
+      <nav aria-label="Main">
+        <ul>
+          <li><a href="#how">How it works</a></li>
+          <li><a href="#privacy">Privacy</a></li>
+          <li><a class="pill" href={appUrl}>Try it</a></li>
+        </ul>
+      </nav>
+    </header>
+
+    <main id="main" tabindex="-1">
+      <div class="journey" data-journey>
+        <section class="hero" aria-labelledby="hero-title">
+          <p class="eyebrow">Price-talk prep for freelancers in India</p>
+          <h1 id="hero-title">
+            Know your floor <em>before they name their price.</em>
+          </h1>
+          <p class="promise">
+            Your floor, target and opening are calculated from your own inputs. Every number shows
+            its working.
+          </p>
+          <div class="ctas">
+            <a class="button button-primary" href={appUrl}>
+              Try the price ladder <span class="arrow" aria-hidden="true"></span>
+            </a>
+            <a class="button button-secondary" href="#how">See how it works</a>
+          </div>
+        </section>
+
+        <div class="stage" data-stage data-hero="poster" aria-hidden="true">
+          <Poster rungs={ladder.rungs} />
+          <div class="scene">
+            <HeroScene client:media="(prefers-reduced-motion: no-preference)" permille={permille} />
+          </div>
+        </div>
+
+        <aside class="example-card glass" aria-labelledby="card-title">
+          <p class="card-head">
+            <span id="card-title">A price ladder</span>
+            <span class="example-tag">Example (made up)</span>
+          </p>
+          <ol class="card-rungs">
+            {
+              (['opening', 'target', 'floor'] as const).map((id) => (
+                <li class={`card-rung card-${id}`}>
+                  <span class="card-name">{steps[id].title}</span>
+                  <span class="card-value" data-label="CALCULATION">
+                    <strong>{byId[id]?.value}</strong> <span class="chip">CALCULATION</span>
+                  </span>
+                </li>
+              ))
+            }
+          </ol>
+          <p class="card-room" data-label="CALCULATION">
+            {roomLine} <span class="chip">CALCULATION</span>
+          </p>
+        </aside>
+
+        <p class="stage-alt" id="scene-description">
+          <span class="visually-hidden">About the picture: </span>A ladder on two glass rails above
+          a few dark stones. Its lowest rung is a slab of stone, the middle rung is glass with a
+          copper edge, and the top rung is a bar of warm light. Scrolling down, the rungs fold away
+          and rise again one by one to the heights of the floor, target and opening described
+          below.
+        </p>
+
+        <section class="story" aria-labelledby="story-title">
+          <h2 id="story-title">How a ladder is built</h2>
+          <p class="lede">
+            A made-up website project: a monthly need, the days the work takes and its costs. The
+            numbers are calculated by the same engine the app uses.
+          </p>
+          <ol class="steps">
+            {
+              (['floor', 'target', 'opening'] as const).map((id) => (
+                <li class={`step step-${id}`} aria-labelledby={`step-${id}`}>
+                  <p class="look">{steps[id].look}</p>
+                  <h3 id={`step-${id}`}>
+                    {steps[id].title} <span class="tagline">{steps[id].tagline}</span>
+                  </h3>
+                  <p>{steps[id].caption}</p>
+                  <p class="value" data-label="CALCULATION">
+                    <strong>{byId[id]?.value}</strong> <span class="chip">CALCULATION</span>
+                  </p>
+                </li>
+              ))
+            }
+          </ol>
+          <p class="room" data-label="CALCULATION">
+            {roomLine} <span class="chip">CALCULATION</span>
+          </p>
+          <p class="note">Calculated from made-up inputs. This is not a market rate.</p>
+        </section>
+      </div>
+
+      <section class="band why" aria-labelledby="why-title">
+        <div class="band-head">
+          <h2 id="why-title">Why <em>MolBhav</em></h2>
+          <p>Built to be checked, not trusted on faith.</p>
+        </div>
+        <ul class="pillars">
+          {
+            pillars.map((p) => (
+              <li class="pillar">
+                <span class={`icon icon-${p.icon}`} aria-hidden="true" />
+                <h3>
+                  {p.title} {p.planned && <span class="chip chip-planned">Planned</span>}
+                </h3>
+                <p>{p.text}</p>
+              </li>
+            ))
+          }
+        </ul>
+      </section>
+
+      <section class="section how" id="how" aria-labelledby="how-title">
+        <h2 id="how-title">How it works</h2>
+        <ol class="how-steps">
+          {
+            how.map((s) => (
+              <li class={`how-step${s.planned ? ' is-planned' : ''}`}>
+                <h3>
+                  {s.title} {s.planned && <span class="chip chip-planned">Planned</span>}
+                </h3>
+                <p>{s.text}</p>
+              </li>
+            ))
+          }
+        </ol>
+        <a class="button button-primary" href={appUrl}>
+          Try the price ladder <span class="arrow" aria-hidden="true"></span>
+        </a>
+      </section>
+
+      <section class="band trust" id="privacy" aria-labelledby="privacy-title">
+        <h2 id="privacy-title">Private <em>by default</em></h2>
+        <div class="trust-grid">
+          <div class="glass trust-card">
+            <h3>Stays on your device</h3>
+            <p>The deals you save, in your browser’s own storage, and the app itself.</p>
+          </div>
+          <div class="glass trust-card">
+            <h3>Never leaves it</h3>
+            <p>Anything you type: names, prices, costs, quotes, and the ladders made from them.</p>
+          </div>
+          <div class="glass trust-card">
+            <h3>Delete everything</h3>
+            <p>
+              One button in Settings and privacy removes every deal from this device. It can’t be
+              undone, so the app asks first.
+            </p>
+          </div>
+        </div>
+      </section>
     </main>
+
+    <footer class="foot">
+      <div class="foot-inner">
+        <p class="wordmark">
+          <span class="mark" aria-hidden="true"><span></span><span></span><span></span></span>
+          MolBhav
+        </p>
+        <nav aria-label="Footer">
+          <ul>
+            <li><a href="#how">How it works</a></li>
+            <li><a href="#privacy">Privacy</a></li>
+            <li><a href={appUrl}>Try it</a></li>
+          </ul>
+        </nav>
+        <p>Not legal or tax advice.</p>
+        <p>A solo student project in active development.</p>
+      </div>
+    </footer>
   </body>
 </html>

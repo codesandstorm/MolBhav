@@ -15,4 +15,28 @@ Solo project, no fixed deadline. "Planned" comes from [03_scope_and_cut_line.md]
 | 2026-11-11 | Step D: S1 setup, S2 ladder screen, S7 evidence log, S13 IndexedDB + delete-all, shell, label test, Playwright privacy + a11y | S1 5 · S2 (rest) · S7 5 · S13 4 · shell 6 | ~0.15 (02:37–02:46) | — | done locally |
 | 2026-11-11 | Close-out: concession room from rounded rungs (spec 13 v0.3), exponent cap, stricter S7 label test, 08 §7 copy rows | not in plan (Phase A fixes) | ~0.05 (02:58–03:02) | — | done; checks green |
 | 2026-11-11 | Repo wiring prep: git state check, ignore rules for data/, .gitattributes (LF), CI pinned to .nvmrc, lockfile Linux-binary check, README | not in plan | ~0.05 (03:04–03:07) | — | done; nothing committed or pushed |
-Session total so far: ~0.5 h [CALCULATION: 01:38–01:41, 02:28–02:46, 02:58–03:02 and 03:04–03:07, rounded up]. Planned for Phase A: 34 h [EVIDENCE: docs/product/03_scope_and_cut_line.md]. The gap is mostly your review time, which this column does not count.
+
+## Phase A2 · Design language + hero scene (planned 20 h)
+| Date | Task | Planned h | Actual (session) h | Actual (Sandarbh) h | Status / notes |
+|---|---|---|---|---|---|
+| 2026-11-11 | Read 08, 03, 09, 11, 07, 12; font ₹-glyph check | (in tokens) | ~0.05 (03:16–03:20) | — | done; branch is `main`, not `phase-a2-design` (no branch created: git writes not allowed) |
+| 2026-11-11 | Step 1: packages/tokens (TS source, generated CSS, 61 tests: contrast, drift, raw-value scan) + 15_design_language.md | 5 | ~0.1 (03:20–03:24, doc 03:40–03:43) | — | done |
+| 2026-11-11 | Step 2: app ladder restyle on tokens | 3 | ~0.05 (03:24–03:27) | — | done; no behaviour change, app tests green |
+| 2026-11-11 | Step 3: hero page, R3F island, poster, choreography | 9 | ~0.1 (03:27–03:33) | — | done |
+| 2026-11-11 | Step 4: budget, fallback, a11y, keyboard, privacy tests; CI wiring; screenshots | 3 | ~0.2 (03:33–03:40, 03:43–03:50) | — | done locally; **TBT budget fails** (269–424 ms vs 200 ms, all from the 3D start-up; 0–5 ms without 3D); awaiting a decision, budget not loosened; CI not run |
+Phase A2 session total: ~0.6 h [CALCULATION: 03:16 → 03:50]. Planned: 20 h [EVIDENCE: 03_scope_and_cut_line.md].
+
+### Phase A2 revision · reference look, app redesign, showcase, design lock
+| Date | Part | Actual (session) h | Actual (Sandarbh) h | Status / notes |
+|---|---|---|---|---|
+| 2026-11-11 | Reference study + palette sampling (PIL, scratchpad) | ~0.05 (03:54–03:58) | — | done; the brief names `hero-concept.png`, the file is `concept_hero.png`; `docs/product/reference/` gitignored; branch is still `main` (no `phase-a2-design` exists; git writes not allowed) |
+| 2026-11-11 | Part 1: tokens v1.0 (dark only, glass/glow/gradient, contrast fixes, design-lock test) | ~0.1 (03:58–04:04) | — | done; 58 token tests; lock checked by mutating a token (fails) and restoring (passes) |
+| 2026-11-11 | Part 2: app redesign (8 shared components, every screen, 360 → 1280 px) | ~0.1 (04:04–04:09) | — | done; S7 labels, no-room, lint-rule, axe, keyboard, privacy, delete-all all green |
+| 2026-11-11 | Decision 3: GSAP removed; own scroll-progress module + tests | ~0.05 (04:09–04:11) | — | done |
+| 2026-11-11 | Part 3: showcase redesign (hero, story, example card, pillars, how it works, trust, footer; 3D after first interaction; posters) | ~0.15 (04:11–04:19) | — | done |
+| 2026-11-11 | Part 4: Playwright (15 site tests), budget 5×, 36 screenshots | ~0.1 (04:19–04:24) | — | done locally; budget 5× all green (long tasks after first scroll 275 / 289 / 303 ms); CI not run |
+| 2026-11-11 | Docs: 15 (LOCKED v1.0), 08, README, this log | ~0.15 (04:22–04:36) | — | done; final check run 04:31–04:36 |
+
+Phase A2 revision session total: ~0.7 h [CALCULATION: 03:54 → 04:36]. Phase A2 including the first pass: ~1.3 h [CALCULATION: 0.6 + 0.7].
+
+Session total so far: ~1.8 h [CALCULATION: 01:38–01:41, 02:28–02:46, 02:58–03:02 and 03:04–03:07, rounded up, 03:16–03:50 and 03:54–04:36]. Planned for Phase A: 34 h [EVIDENCE: docs/product/03_scope_and_cut_line.md]. The gap is mostly your review time, which this column does not count.
