@@ -1,70 +1,7 @@
-import { useId, useState, type FormEvent, type ReactNode } from 'react';
+import { useState, type FormEvent, type ReactNode } from 'react';
 import { copy } from '../copy.ts';
 import type { DealForm } from '../form.ts';
-import { Labelled, type ClaimLabel } from '../components/Labelled.tsx';
-
-type Field = 'name' | 'e' | 'K' | 'M' | 'C' | 'b' | 't' | 'a' | 'Q';
-
-function TextField(props: {
-  id: Field;
-  label: string;
-  hint?: string;
-  value: string;
-  error?: string | undefined;
-  onChange: (v: string) => void;
-  inputMode?: 'decimal' | 'numeric' | 'text';
-  prefix?: string;
-  /** a pre-filled suggestion the user has not changed: shown with its label chip */
-  claim?: ClaimLabel | undefined;
-}) {
-  const uid = useId();
-  const hintId = `${uid}-hint`;
-  const errId = `${uid}-err`;
-  const describedBy = [props.hint ? hintId : null, props.error ? errId : null]
-    .filter(Boolean)
-    .join(' ');
-  const control = (
-    <>
-      {props.prefix && <span aria-hidden="true">{props.prefix}</span>}
-      <input
-        id={uid}
-        name={props.id}
-        type="text"
-        inputMode={props.inputMode ?? 'decimal'}
-        autoComplete="off"
-        value={props.value}
-        aria-invalid={props.error ? true : undefined}
-        aria-describedby={describedBy || undefined}
-        onChange={(ev) => props.onChange(ev.target.value)}
-      />
-    </>
-  );
-  return (
-    <div className="field">
-      <label htmlFor={uid}>{props.label}</label>
-      {props.hint && (
-        <p id={hintId} className="hint" data-rule="">
-          {props.hint}
-        </p>
-      )}
-      {/* What the user typed is their own text; an untouched suggestion carries its label. */}
-      {props.claim ? (
-        <Labelled label={props.claim} as="div" className="input-row">
-          {control}
-        </Labelled>
-      ) : (
-        <div className="input-row" data-user-text="">
-          {control}
-        </div>
-      )}
-      {props.error && (
-        <p id={errId} className="error" role="alert" data-rule="">
-          {props.error}
-        </p>
-      )}
-    </div>
-  );
-}
+import { Button, Field as TextField, Glass, type FieldName as Field } from '../components/ui.tsx';
 
 function Choice<T extends string>(props: {
   name: string;
@@ -77,7 +14,7 @@ function Choice<T extends string>(props: {
     <fieldset className="choice">
       <legend>{props.legend}</legend>
       {(Object.keys(props.options) as T[]).map((k) => (
-        <label key={k}>
+        <label key={k} className="choice-option">
           <input
             type="radio"
             name={props.name}
@@ -85,7 +22,7 @@ function Choice<T extends string>(props: {
             checked={props.value === k}
             onChange={() => props.onChange(k)}
           />
-          {props.options[k]}
+          <span>{props.options[k]}</span>
         </label>
       ))}
     </fieldset>
@@ -112,79 +49,94 @@ export function Setup({
     onSubmit(f);
   };
   return (
-    <form onSubmit={submit} noValidate aria-labelledby="setup-title">
-      <h2 id="setup-title" tabIndex={-1}>
-        {copy.setup.title}
-      </h2>
-      <TextField
-        id="name"
-        label={copy.setup.name}
-        hint={copy.setup.nameHint}
-        inputMode="text"
-        value={f.name}
-        onChange={(v) => set('name', v)}
-      />
-      <Choice
-        name="u"
-        legend={copy.setup.unit}
-        value={f.u}
-        options={copy.setup.unitOptions}
-        onChange={(v) => setF((x) => ({ ...x, u: v, eu: v === 'hour' ? 'hour' : x.eu }))}
-      />
-      {f.u !== 'hour' && (
-        <Choice
-          name="eu"
-          legend={copy.setup.effortUnit}
-          value={f.eu}
-          options={copy.setup.effortUnitOptions}
-          onChange={(v) => set('eu', v)}
+    <form className="screen setup" onSubmit={submit} noValidate aria-labelledby="setup-title">
+      <header className="screen-head">
+        <h2 id="setup-title" tabIndex={-1}>
+          {copy.setup.title}
+        </h2>
+        <p className="lede">{copy.setup.lede}</p>
+      </header>
+      <Glass as="section" className="group" aria-labelledby="setup-work">
+        <h3 id="setup-work" className="group-title">
+          {copy.setup.groupWork}
+        </h3>
+        <TextField
+          id="name"
+          label={copy.setup.name}
+          hint={copy.setup.nameHint}
+          inputMode="text"
+          value={f.name}
+          onChange={(v) => set('name', v)}
         />
-      )}
-      <TextField
-        id="e"
-        label={copy.setup.effort[f.u]}
-        value={f.e}
-        error={errors.e}
-        onChange={(v) => set('e', v)}
-      />
-      <TextField
-        id="K"
-        label={hours ? copy.setup.capacityHours : copy.setup.capacity}
-        hint={hours ? copy.setup.capacityHintHours : copy.setup.capacityHint}
-        value={f.K}
-        error={errors.K}
-        onChange={(v) => set('K', v)}
-      />
-      <TextField
-        id="M"
-        label={copy.setup.need}
-        hint={copy.setup.needHint}
-        prefix="₹"
-        inputMode="numeric"
-        value={f.M}
-        error={errors.M}
-        onChange={(v) => set('M', v)}
-      />
-      <TextField
-        id="C"
-        label={copy.setup.costs}
-        hint={f.u === 'month' ? copy.setup.costsMonthHint : copy.setup.costsHint}
-        prefix="₹"
-        inputMode="numeric"
-        value={f.C}
-        error={errors.C}
-        onChange={(v) => set('C', v)}
-      />
+        <Choice
+          name="u"
+          legend={copy.setup.unit}
+          value={f.u}
+          options={copy.setup.unitOptions}
+          onChange={(v) => setF((x) => ({ ...x, u: v, eu: v === 'hour' ? 'hour' : x.eu }))}
+        />
+        {f.u !== 'hour' && (
+          <Choice
+            name="eu"
+            legend={copy.setup.effortUnit}
+            value={f.eu}
+            options={copy.setup.effortUnitOptions}
+            onChange={(v) => set('eu', v)}
+          />
+        )}
+        <TextField
+          id="e"
+          label={copy.setup.effort[f.u]}
+          value={f.e}
+          error={errors.e}
+          onChange={(v) => set('e', v)}
+        />
+        <TextField
+          id="K"
+          label={hours ? copy.setup.capacityHours : copy.setup.capacity}
+          hint={hours ? copy.setup.capacityHintHours : copy.setup.capacityHint}
+          value={f.K}
+          error={errors.K}
+          onChange={(v) => set('K', v)}
+        />
+      </Glass>
+      <Glass as="section" className="group" aria-labelledby="setup-money">
+        <h3 id="setup-money" className="group-title">
+          {copy.setup.groupMoney}
+        </h3>
+        <TextField
+          id="M"
+          label={copy.setup.need}
+          hint={copy.setup.needHint}
+          prefix="₹"
+          inputMode="numeric"
+          value={f.M}
+          error={errors.M}
+          onChange={(v) => set('M', v)}
+        />
+        <TextField
+          id="C"
+          label={copy.setup.costs}
+          hint={f.u === 'month' ? copy.setup.costsMonthHint : copy.setup.costsHint}
+          prefix="₹"
+          inputMode="numeric"
+          value={f.C}
+          error={errors.C}
+          onChange={(v) => set('C', v)}
+        />
+      </Glass>
       <button
         type="button"
-        className="link"
+        className="btn btn-quiet more-toggle"
         aria-expanded={more}
         aria-controls="more-detail"
         onClick={() => setMore((m) => !m)}
       >
-        {copy.setup.more}
+        <span>{copy.setup.more}</span>
+        <span className="disclosure-icon" aria-hidden="true" />
       </button>
       <div
+        className="glass group"
         id="more-detail"
         hidden={!(more || Boolean(errors.b || errors.t || errors.a || errors.Q))}
       >
@@ -226,9 +178,11 @@ export function Setup({
           onChange={(v) => set('Q', v)}
         />
       </div>
-      <button type="submit" className="primary">
-        {copy.setup.submit}
-      </button>
+      <div className="form-actions">
+        <Button type="submit" variant="primary">
+          {copy.setup.submit}
+        </Button>
+      </div>
     </form>
   );
 }

@@ -52,5 +52,7 @@ jobs:
       - name: Install Playwright Chromium
         run: npx playwright install --with-deps chromium
         working-directory: apps/app
-      - name: End-to-end (privacy, storage, accessibility)
-        run: npm run test:e2e
+      - name: App end-to-end (privacy, storage, accessibility)
+        run: npm run test:e2e -w apps/app
+      - name: Site build, hero tests and performance budget
+        run: npm run test:e2e -w apps/site

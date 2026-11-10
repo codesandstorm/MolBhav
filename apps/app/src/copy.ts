@@ -6,7 +6,10 @@ import type { ErrorCode } from '@molbhav/engine';
 
 export const copy = {
   welcome: {
-    headline: 'Walk into the price talk with a number you can defend.',
+    eyebrow: 'Price-talk prep for freelancers',
+    // 08 §7 headline, split so the emphasis can be set in italic
+    headlineLead: 'Walk into the price talk with',
+    headlineEmphasis: 'a number you can defend.',
     sub: 'Calculate your floor, read your client’s reply, and choose a counter that trades instead of caves.',
     example: 'Try an example deal',
     start: 'Start my deal',
@@ -15,6 +18,9 @@ export const copy = {
   },
   setup: {
     title: 'Your deal',
+    lede: 'A few answers give you a ladder. Everything stays on this device.',
+    groupWork: 'The work',
+    groupMoney: 'The money',
     name: 'Deal name (optional)',
     nameHint: 'Only you see this. For example “Website for a bakery”.',
     unit: 'Per project, hour or month?',
@@ -84,6 +90,17 @@ export const copy = {
     confirmYes: 'Yes, delete everything',
     confirmNo: 'Cancel',
     deleted: 'Everything on this device was deleted.',
+    staysTitle: 'What stays on this device',
+    stays: [
+      'The deals you save, in this browser’s own storage.',
+      'The app itself, cached so it opens without a connection.',
+    ],
+    neverTitle: 'What never leaves it',
+    never: [
+      'Anything you type: names, prices, costs, quotes.',
+      'Your ladders and the working behind them.',
+    ],
+    deleteTitle: 'Delete everything',
   },
   deals: { title: 'Your deals', open: 'Open', untitled: 'Untitled deal' },
   nav: { home: 'Home', settings: 'Settings and privacy' },

@@ -39,3 +39,6 @@ test-results/
 *.h5
 *.joblib
 *.pkl
+.budget/
+# private concept art: never committed or shipped
+docs/product/reference/

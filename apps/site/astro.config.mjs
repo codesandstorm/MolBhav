@@ -1,4 +1,5 @@
 import { defineConfig } from 'astro/config';
+import react from '@astrojs/react';
 
-// Static showcase. 3D scenes arrive in Phase A2 (hero) and Phase SC (docs/product/03_scope_and_cut_line.md).
-export default defineConfig({ output: 'static' });
+// Static showcase. One React island (the hero ladder); 3D code loads only on demand.
+export default defineConfig({ output: 'static', integrations: [react()] });

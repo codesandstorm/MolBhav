@@ -5,6 +5,7 @@ import { emptyForm, errorField, exampleForm, toLadderInput, type DealForm } from
 import { Setup } from './screens/Setup.tsx';
 import { Ladder } from './screens/Ladder.tsx';
 import { Evidence, Settings, Welcome } from './screens/Other.tsx';
+import { TopBar } from './components/ui.tsx';
 import { claimsFor } from './claims.ts';
 import { deleteEverything, listDeals, newId, saveDeal, type StoredDeal } from './storage.ts';
 
@@ -54,19 +55,13 @@ export function App() {
 
   return (
     <>
-      <header className="top">
-        <h1>
-          <button type="button" className="brand" onClick={() => setScreen('welcome')}>
-            MolBhav
-          </button>
-        </h1>
-        <nav aria-label="Main">
-          <button type="button" className="link" onClick={() => setScreen('settings')}>
-            {copy.nav.settings}
-          </button>
-        </nav>
-      </header>
-      <main>
+      <TopBar
+        onHome={() => setScreen('welcome')}
+        onSettings={() => setScreen('settings')}
+        settingsLabel={copy.nav.settings}
+        current={screen === 'settings' ? 'settings' : 'other'}
+      />
+      <main className="main" data-screen={screen}>
         {screen === 'welcome' && (
           <Welcome
             deals={deals}
