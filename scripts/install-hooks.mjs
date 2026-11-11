@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Installs the local git hooks that run scripts/guard-git.mjs. Safe to re-run.
+ * Installs the local git hooks that run the repository guard. Safe to re-run.
  *
  *   node scripts/install-hooks.mjs
  *
@@ -9,13 +9,17 @@
  * - commit-msg: refuses Co-authored-by trailers, "Generated with" lines, and listed names.
  * - pre-push: refuses pushes to main, and pushed commits whose message or identity fails.
  *
+ * The hooks run a copy of scripts/guard-git.mjs kept in .git/hooks, so they work on every branch,
+ * including branches cut before the guard existed. Re-run this script after the guard changes.
+ *
  * Hooks live in .git/hooks (not in the repository). The blocked-name list is the local file
  * .git/hooks/guard-local-names.txt, one name per line; this script creates it empty if it is
  * missing and never overwrites it. Keep it out of the repository and out of CI.
  */
 import { execFileSync } from 'node:child_process';
-import { chmodSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
-import { join, resolve } from 'node:path';
+import { chmodSync, copyFileSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
+import { dirname, join, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 const MARK = '# installed by scripts/install-hooks.mjs';
 const top = execFileSync('git', ['rev-parse', '--show-toplevel']).toString().trim();
@@ -24,13 +28,17 @@ const hooks = resolve(
   execFileSync('git', ['rev-parse', '--git-path', 'hooks'], { cwd: top }).toString().trim(),
 );
 const names = join(hooks, 'guard-local-names.txt');
+const guardSource = join(dirname(fileURLToPath(import.meta.url)), 'guard-git.mjs');
+const guardCopy = join(hooks, 'guard-git.mjs');
 
 const hook = (mode, args) =>
   [
     '#!/bin/sh',
     MARK,
     'cd "$(git rev-parse --show-toplevel)" || exit 1',
-    `exec node scripts/guard-git.mjs ${mode} ${args}--names "$(git rev-parse --git-path hooks)/guard-local-names.txt"`,
+    'h="$(git rev-parse --git-path hooks)"',
+    '[ -f "$h/guard-git.mjs" ] || { echo "guard: $h/guard-git.mjs is missing; run node scripts/install-hooks.mjs" >&2; exit 1; }',
+    `exec node "$h/guard-git.mjs" ${mode} ${args}--names "$h/guard-local-names.txt"`,
     '',
   ].join('\n');
 
@@ -39,6 +47,9 @@ const wanted = {
   'commit-msg': hook('commit-msg', '"$1" '),
   'pre-push': hook('pre-push', '"$1" "$2" '),
 };
+
+copyFileSync(guardSource, guardCopy);
+console.log(`copied the guard to ${guardCopy}`);
 
 let failed = false;
 for (const [name, body] of Object.entries(wanted)) {
