@@ -127,6 +127,8 @@ The product shot is made by `apps/site/scripts/product-shot.ts` from the running
 | **Top bar** (`TopBar`) | sticky glass (94 %), wordmark with the three-rung mark, one nav item ("Settings and privacy"): only screens that exist | — | ring | — | — | current page in peach |
 | **Toast** (`Toast`) | fixed bottom pill, glass, `role="status"`; never shifts layout | — | — | — | — | — |
 
+**Every state has a contrast pair.** Each hover, focus, active, checked and error rule that changes a colour has a row in `STATE_PAIRS` (packages/tokens/test/tokens.test.ts): the foreground token, the surface it sits on in that state, and its threshold (4.5:1 text, 3:1 UI and focus rings). A coverage test parses both stylesheets and fails if a state rule that sets `color`, `background`, `border-color`, `outline`, `box-shadow` or `opacity` has no row; rules that change no colour are listed by name. Disabled controls are exempt (WCAG 1.4.3). The app's axe e2e checks each screen with the pointer parked at (0,0), over every rung and button, and with keyboard focus on every focusable element, each after all animations have finished [EVIDENCE: tokens.test.ts "contrast (WCAG AA) in every interactive state"; apps/app/e2e/a11y.spec.ts].
+
 A2.1 layout: on desktop the ladder screen puts the rungs and the room line in one column and the quote, working and actions in a second, sticky column, so there is no empty area under the rungs; the evidence table keeps whole words (a fixed "What" column, a wider page on desktop); the welcome's mini ladder sits on a lit panel with rails.
 
 The screens use only these: welcome, setup (two glass groups, "Add more detail" toggle), ladder (three rungs, concession-room line, quote track, trace disclosure), evidence log (a table that stacks into cards below 40 rem), settings and privacy (what stays, what never leaves, delete everything) [EVIDENCE: apps/app/src/screens; screenshots in docs/product/screens/app-*].
@@ -140,6 +142,7 @@ The screens use only these: welcome, setup (two glass groups, "Add more detail" 
 | `--mb-duration-scene` | 1200 ms | reserved for the showcase |
 | `--mb-ease-standard` / `settle` / `exit` | `cubic-bezier(0.2,0,0,1)` / `(0.16,1,0.3,1)` / `(0.4,0,1,1)` | UI / arriving / leaving |
 - Only `opacity` and `transform` animate, so nothing shifts layout [EVIDENCE: apps/*/src/**/*.css; CLS 0.001 in the budget run].
+- **App entrance animations move, they do not fade.** The rung rise and the toast animate `transform` only. A fade puts text below 4.5:1 for part of its duration: on CI, axe sampled the Target rung mid-fade and measured its tagline at 2.85:1 and its chip at 3.74:1 (opacity ≈ 0.5). A test fails if any app `@keyframes` animates `opacity` [EVIDENCE: tokens.test.ts "no app entrance animation fades text"]. The showcase's section reveals still fade [GAP: the site was outside this fix and was not measured mid-reveal].
 - `prefers-reduced-motion: reduce` sets every duration to 0 ms, and both stylesheets disable animation and transition. In the showcase the 3D island is never hydrated, so no animation code is downloaded [EVIDENCE: apps/site/e2e/hero.spec.ts "reduced motion"].
 - 3D loads only after the first scroll, wheel, touch, pointer press or key press. Pointer movement does not count, because browsers may synthesise it [EVIDENCE: apps/site/src/lib/first-interaction.ts and its tests].
 - No autoplay, no scroll-jacking, no pinning, no smooth-scroll override, no preloader, no audio. Ambient motes and parallax are the only motion not driven by scroll; both stop off screen and never run under reduced motion.
@@ -165,6 +168,8 @@ This language is **LOCKED v1.0**. To change any token:
 3. `npm test` must pass. The lock test reads the last row, so editing tokens without a new row fails.
 
 Get the hash with: `node -e "const c=require('crypto'),fs=require('fs');console.log(c.createHash('sha256').update(fs.readFileSync('packages/tokens/src/index.ts','utf8').replace(/\r\n/g,'\n')).digest('hex'))"`.
+
+**B1.1b contrast fix (2026-11-11): no token changed.** The rung and toast entrance animations no longer fade (§7), and every interactive state now has a tested contrast pair (§6). Only CSS and tests changed; the token source still hashes to the v1.0 row, so no new row was added.
 
 **A2.1 polish (2026-11-11): no token changed.** The token source still hashes to the v1.0 row, so no new row was added; every new colour in A2.1 (scene shading, atmosphere, icons) is mixed from existing tokens.
 

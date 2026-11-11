@@ -42,6 +42,250 @@ describe('contrast (WCAG AA) for every pair in use', () => {
     });
 });
 
+/**
+ * Interactive states (hover, focus-visible, active, checked, error). Each row names the CSS
+ * rule that creates the state and the foreground/surface pair it produces, so the pair list
+ * covers states and not only default looks. The coverage test below fails when a state rule in
+ * the app or site CSS has no row here. Lives in the test, not in src/index.ts, because the
+ * token source is LOCKED (15 §9); every colour here is an existing token.
+ */
+export const STATE_PAIRS: {
+  rule: string;
+  state: string;
+  fg: ColorRole;
+  bg: ColorRole;
+  kind: keyof typeof minContrast;
+}[] = [
+  // app
+  { rule: ':focus-visible', state: 'focus ring on the page', fg: 'focus', bg: 'bg', kind: 'ui' },
+  {
+    rule: 'h2:focus-visible',
+    state: 'focus ring on a screen heading',
+    fg: 'focus',
+    bg: 'bg',
+    kind: 'ui',
+  },
+  { rule: ':focus-visible', state: 'focus ring on cards', fg: 'focus', bg: 'surface', kind: 'ui' },
+  {
+    rule: ':focus-visible',
+    state: 'focus ring next to a hovered control',
+    fg: 'focus',
+    bg: 'surfaceRaised',
+    kind: 'ui',
+  },
+  {
+    rule: ':focus-visible',
+    state: 'focus ring around an input',
+    fg: 'focus',
+    bg: 'surfaceSunken',
+    kind: 'ui',
+  },
+  {
+    rule: '.btn-secondary:hover:not(:disabled)',
+    state: 'hover: secondary label',
+    fg: 'accent',
+    bg: 'surfaceRaised',
+    kind: 'text',
+  },
+  {
+    rule: '.btn-quiet:hover:not(:disabled)',
+    state: 'hover: quiet label',
+    fg: 'text',
+    bg: 'surfaceRaised',
+    kind: 'text',
+  },
+  {
+    rule: '.btn-danger:hover:not(:disabled)',
+    state: 'hover: danger label',
+    fg: 'danger',
+    bg: 'surfaceRaised',
+    kind: 'text',
+  },
+  {
+    rule: '.btn-primary:hover:not(:disabled)',
+    state: 'hover: primary label (glow only)',
+    fg: 'textOnAccent',
+    bg: 'accentDeep',
+    kind: 'text',
+  },
+  {
+    rule: '.input-row:hover',
+    state: 'hover: input border',
+    fg: 'textMuted',
+    bg: 'surfaceSunken',
+    kind: 'ui',
+  },
+  {
+    rule: '.input-row:focus-within',
+    state: 'focus: input ring',
+    fg: 'focus',
+    bg: 'surface',
+    kind: 'ui',
+  },
+  {
+    rule: '.field-error .input-row',
+    state: 'error: input border',
+    fg: 'danger',
+    bg: 'surfaceSunken',
+    kind: 'ui',
+  },
+  {
+    rule: '.textarea-row:hover',
+    state: 'hover: message box border',
+    fg: 'textMuted',
+    bg: 'surfaceSunken',
+    kind: 'ui',
+  },
+  {
+    rule: '.textarea-row:focus-within',
+    state: 'focus: message box ring',
+    fg: 'focus',
+    bg: 'surface',
+    kind: 'ui',
+  },
+  {
+    rule: '.field-error .textarea-row',
+    state: 'error: message box border',
+    fg: 'danger',
+    bg: 'surfaceSunken',
+    kind: 'ui',
+  },
+  {
+    rule: '.choice-option:hover',
+    state: 'hover: unchosen option',
+    fg: 'textMuted',
+    bg: 'surfaceRaised',
+    kind: 'text',
+  },
+  {
+    rule: '.choice-option:has(input:checked)',
+    state: 'checked: option label',
+    fg: 'text',
+    bg: 'surfaceRaised',
+    kind: 'text',
+  },
+  {
+    rule: '.choice-option:has(input:checked)',
+    state: 'checked: option border',
+    fg: 'accent',
+    bg: 'surface',
+    kind: 'ui',
+  },
+  {
+    rule: '.choice-option:has(input:focus-visible)',
+    state: 'focus: option ring',
+    fg: 'focus',
+    bg: 'surface',
+    kind: 'ui',
+  },
+  {
+    rule: '.disclosure summary:hover',
+    state: 'hover: disclosure label',
+    fg: 'accent',
+    bg: 'surfaceRaised',
+    kind: 'text',
+  },
+  {
+    rule: '.deal:hover',
+    state: 'hover: saved deal name',
+    fg: 'text',
+    bg: 'surfaceRaised',
+    kind: 'text',
+  },
+  {
+    rule: '.deal:hover',
+    state: 'hover: saved deal details',
+    fg: 'textMuted',
+    bg: 'surfaceRaised',
+    kind: 'text',
+  },
+  {
+    rule: '.deal:hover',
+    state: 'hover: chips on a hovered deal',
+    fg: 'chipText',
+    bg: 'chipBg',
+    kind: 'text',
+  },
+  // site
+  { rule: '.top nav a:hover', state: 'hover: nav link', fg: 'accent', bg: 'bg', kind: 'text' },
+  {
+    rule: '.foot nav a:hover',
+    state: 'hover: footer link',
+    fg: 'accent',
+    bg: 'bgBand',
+    kind: 'text',
+  },
+  {
+    rule: '.top nav a.pill:hover',
+    state: 'hover: nav pill (glow only)',
+    fg: 'textOnAccent',
+    bg: 'accentDeep',
+    kind: 'text',
+  },
+  {
+    rule: '.button-primary:hover',
+    state: 'hover: primary call to action (glow only)',
+    fg: 'textOnAccent',
+    bg: 'accentDeep',
+    kind: 'text',
+  },
+  {
+    rule: '.button-secondary:hover',
+    state: 'hover: secondary call to action',
+    fg: 'text',
+    bg: 'surfaceRaised',
+    kind: 'text',
+  },
+];
+
+/** State rules that change no colour (outline: none on an element whose wrapper draws the ring). */
+const STATE_RULES_WITHOUT_COLOUR = new Set([
+  'h2:focus',
+  'main:focus',
+  '.input-row input:focus-visible',
+  '.textarea-row textarea:focus-visible',
+  '.input-row select:focus-visible',
+  '.btn:disabled', // disabled controls are exempt from WCAG contrast (1.4.3)
+]);
+
+describe('contrast (WCAG AA) in every interactive state', () => {
+  for (const p of STATE_PAIRS)
+    it(`${p.state}: ${p.fg} on ${p.bg} (${p.kind}; ${p.rule})`, () => {
+      const ratio = contrast(color[p.fg], color[p.bg]);
+      expect(ratio, `${ratio.toFixed(2)}:1`).toBeGreaterThanOrEqual(minContrast[p.kind]);
+    });
+
+  it('every hover / focus / active / checked / error rule in the CSS has a state pair', () => {
+    const covered = new Set(STATE_PAIRS.map((p) => p.rule));
+    const missing: string[] = [];
+    for (const f of [
+      join(root, 'apps', 'app', 'src', 'styles.css'),
+      join(root, 'apps', 'site', 'src', 'styles', 'site.css'),
+    ]) {
+      const css = readFileSync(f, 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
+      for (const m of css.matchAll(/([^{}]+)\{([^{}]*)\}/g)) {
+        if (!/\b(color|background|border-color|outline|box-shadow|opacity)\s*:/.test(m[2] ?? ''))
+          continue;
+        for (const sel of (m[1] ?? '').split(',').map((s) => s.trim().replace(/\s+/g, ' ')))
+          if (/:hover|:focus|:active|:checked|field-error|aria-invalid|:disabled/.test(sel))
+            if (!covered.has(sel) && !STATE_RULES_WITHOUT_COLOUR.has(sel))
+              missing.push(`${relative(root, f)}: ${sel}`);
+      }
+    }
+    expect(missing).toEqual([]);
+  });
+
+  it('no app entrance animation fades text: @keyframes animate transform only, never opacity', () => {
+    // A fade-in passes through frames where text is below 4.5:1 (axe caught one mid-fade on
+    // CI: the target tagline at 2.85:1 at opacity 0.49). 15 §6.
+    const css = readFileSync(join(root, 'apps', 'app', 'src', 'styles.css'), 'utf8');
+    const frames = [...css.matchAll(/@keyframes\s+([\w-]+)\s*\{([\s\S]*?)\n\}/g)];
+    expect(frames.length).toBeGreaterThan(0);
+    for (const [, name, body] of frames)
+      expect(/\bopacity\s*:/.test(body ?? ''), `@keyframes ${name} animates opacity`).toBe(false);
+  });
+});
+
 /** Alpha-composite `fg` at `a` over an opaque `bg`, as a hex colour. */
 export const over = (fg: string, a: number, bg: string): string => {
   const ch = (h: string, i: number) => parseInt(h.replace('#', '').slice(i, i + 2), 16);
