@@ -87,3 +87,13 @@ Times are from file modification times on this machine; the start of the investi
 | 2026-11-11 | a11y.spec: axe waits for animations and fonts; pointer parked at (0,0), over every rung and button, keyboard focus on every focusable element | ~0.08 (17:00–17:05) | — | done; no assertion removed or loosened |
 | 2026-11-11 | App e2e 5× on a fresh build | ~0.03 (17:05–17:07) | — | 50/50 pass, in system Edge. **Linux not run**: no Docker or WSL here, and Playwright's own Chromium headless shell (build 1254, what CI uses) is not installed, so `CI=1` could not launch |
 | 2026-11-11 | Docs 15 (§6 state pairs, §7 no-fade rule, §10 note: tokens unchanged), this log; final checks | ~0.1 (17:07–17:13) | — | lint, format, typecheck clean; unit 482 passed + 1 skipped (app 20, site 44, analyser 204, engine 64, gold 62+1 skipped, tokens 88); hand-verified 14; build ok; e2e app 10/10, site 26/26 (Edge); CI not run |
+
+### CI verify · e2e on CI's Chromium, locally (branch `phase-ci-verify`)
+Times were not recorded per step [GAP].
+
+| Date | Part | Actual (session) h | Actual (Sandarbh) h | Status / notes |
+|---|---|---|---|---|
+| 2026-11-11 | Playwright's Chromium installed (owner-approved); e2e runs with `CI=1` on fresh builds, ports 4173/4180/4321/4181 checked free before and after each run | — | — | app 5 × 10/10 (50/50). One earlier app run failed on a stale preview server I had left running; it was discarded and the server stopped. Site runs that failed with `EADDRINUSE` on 4321 had the same cause (my own stray static server) and were discarded |
+| 2026-11-11 | Site reveals: fade race checked | — | — | 5 × 26/26 on the old CSS, but frozen frames reproduced it: 19 and 12 axe color-contrast failures at opacity 0.49/0.63. Fix: reveals rise without fading (CSS only, no token change); tokens test now fails on any fade of text in either stylesheet; e2e checks the rise and opacity 1. After: 20 frozen frames, 0 failures |
+| 2026-11-11 | Site e2e 5× after the fix | — | — | 4 × 26/26, 1 × 25/26: the reduced-motion test pressed Tab after the wheel, and focusing the skip link scrolled back to the top (reproduced: 3000 → 0). Test now presses Tab first and waits for the scroll; same assertions. Then 5 × 26/26 (130/130) |
+| 2026-11-11 | Docs 15 §7, README, this log | — | — | Linux not run (no Docker or WSL) [GAP] |
