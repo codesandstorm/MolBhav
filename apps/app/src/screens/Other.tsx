@@ -14,10 +14,14 @@ const useFocus = () => {
 /** Decorative: the three rungs as they look on the ladder screen (stone, glass, glow). */
 function MiniLadder() {
   return (
-    <span className="mini-ladder" aria-hidden="true">
-      <span className="mini-rung mini-opening" />
-      <span className="mini-rung mini-target" />
-      <span className="mini-rung mini-floor" />
+    <span className="mini-stage" aria-hidden="true">
+      <span className="mini-ladder">
+        <span className="mini-rail mini-rail-left" />
+        <span className="mini-rail mini-rail-right" />
+        <span className="mini-rung mini-opening" />
+        <span className="mini-rung mini-target" />
+        <span className="mini-rung mini-floor" />
+      </span>
     </span>
   );
 }

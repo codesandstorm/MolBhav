@@ -2,7 +2,7 @@
 
 MolBhav helps freelancers in India prepare for a price negotiation. It works out a price ladder (floor, target, opening) from your own inputs, on your device. It does not give you a market rate. [EVIDENCE: docs/product/13_price_ladder_spec.md]
 
-MolBhav is a solo student project in active development. Built so far: Phase A (the price ladder) and Phase A2 (the locked v1.0 design language, the redesigned app and the showcase). [EVIDENCE: docs/product/progress_log.md]
+MolBhav is a solo student project in active development. Built so far: Phase A (the price ladder) and Phase A2 (the locked v1.0 design language, the redesigned app and the showcase) and its A2.1 polish (one scene model for the poster and the live hero, atmosphere, the real-app product shot, the quote track). [EVIDENCE: docs/product/progress_log.md]
 
 ## Layout
 
@@ -36,11 +36,11 @@ npm run lint && npm run format:check && npm run typecheck
 npm test             # engine and app unit tests, including property tests
 npm run test:hand    # hand-verified examples (packages/engine/test/hand_verified.json)
 npm run test:e2e     # Playwright: app (privacy, delete-all, keyboard, axe) then site (poster first, 3D after first interaction, fallbacks, axe, keyboard, privacy, budget)
-npm run test:budget  # the site performance budget, 5 runs; min/median/max in apps/site/.budget/report.json
+npm run test:budget  # the site performance budget, 5 runs; min/median/max in apps/site/.budget/report.json; also reports how closely the poster matches the first live frame (report-only)
 ```
 
 Locally, `test:e2e` uses the installed Microsoft Edge. In CI it uses Playwright's Chromium (`npx playwright install --with-deps chromium`). [EVIDENCE: apps/app/playwright.config.ts]
 
 The budget check measures the built site through a gzip static server under a throttled mobile profile (360 px, 150 ms RTT, 1.6 Mbps, 4× CPU). That is a lab proxy, not a real phone. Budgets live in `apps/site/budgets.ts` [EVIDENCE: docs/product/08_experience_and_brand.md §8.3].
 
-Review screenshots (app: welcome, setup, ladder, evidence, settings; site: hero poster, hero live, ladder story, pillars, how it works, trust band, footer; 360, 768 and 1280 px) are in `docs/product/screens/`. Regenerate them with `node apps/site/scripts/screens.ts` while both previews run.
+Review screenshots (app: welcome, setup, ladder, evidence, settings; site: hero poster, hero live, ladder story, pillars, how it works, the real app, trust band, footer, and hero before/after pairs for A2.1; 360, 768 and 1280 px) are in `docs/product/screens/`. Regenerate them with `node apps/site/scripts/screens.ts` while both previews run. The showcase's product shot (`apps/site/public/product/app-ladder.webp`) is a screenshot of the real app with its made-up example deal; it is not made by the build. Rerun `node apps/site/scripts/product-shot.ts` with the app preview running after changing the ladder screen.

@@ -13,6 +13,8 @@ import '@molbhav/tokens/tokens.css';
 import '../styles/site.css';
 import Poster from '../components/Poster.astro';
 import HeroScene from '../components/HeroScene.tsx';
+import Icon from '../components/Icon.astro';
+import shot from '../lib/product-shot.json';
 import { heroLadder } from '../lib/example.ts';
 
 const appUrl = import.meta.env.PUBLIC_APP_URL ?? '/app/';
@@ -176,8 +178,9 @@ const how = [
 
         <p class="stage-alt" id="scene-description">
           <span class="visually-hidden">About the picture: </span>A ladder on two glass rails above
-          a few dark stones. Its lowest rung is a slab of stone, the middle rung is glass with a
-          copper edge, and the top rung is a bar of warm light. Scrolling down, the rungs fold away
+          a few dark stones lit from behind in copper, with a ribbon of glass curving around it and
+          dust drifting in the light. Its lowest rung is a slab of stone, the middle rung is glass
+          with a copper edge, and the top rung is a bar of warm light. Scrolling down, the rungs fold away
           and rise again one by one to the heights of the floor, target and opening described
           below.
         </p>
@@ -211,16 +214,48 @@ const how = [
         </section>
       </div>
 
-      <section class="band why" aria-labelledby="why-title">
+      <section class="section product" aria-labelledby="product-title" data-reveal>
+        <div class="product-copy">
+          <p class="kicker">The app</p>
+          <h2 id="product-title">The same ladder, <em>in your hands</em></h2>
+          <p class="lede">
+            Enter your own days, needs and costs. The app works out your floor, target and opening,
+            and shows the working behind each one.
+          </p>
+          <a class="button button-primary" href={appUrl}>
+            Try the price ladder <span class="arrow" aria-hidden="true"></span>
+          </a>
+        </div>
+        <figure class="device-wrap">
+          <div class="device glass" data-rise>
+            <img
+              src={shot.src}
+              width={shot.width}
+              height={shot.height}
+              loading="lazy"
+              decoding="async"
+              alt="The MolBhav app’s price ladder screen, filled in with its made-up example deal: opening, target and floor, each with its calculation label."
+            />
+          </div>
+          <figcaption>The real app (example data, made up)</figcaption>
+        </figure>
+      </section>
+
+      <section class="band why" aria-labelledby="why-title" data-reveal>
         <div class="band-head">
-          <h2 id="why-title">Why <em>MolBhav</em></h2>
+          <div>
+            <p class="kicker">Principles</p>
+            <h2 id="why-title">Why <em>MolBhav</em></h2>
+          </div>
           <p>Built to be checked, not trusted on faith.</p>
         </div>
         <ul class="pillars">
           {
             pillars.map((p) => (
               <li class="pillar">
-                <span class={`icon icon-${p.icon}`} aria-hidden="true" />
+                <span class="icon-tile">
+                  <Icon name={p.icon} />
+                </span>
                 <h3>
                   {p.title} {p.planned && <span class="chip chip-planned">Planned</span>}
                 </h3>
@@ -231,8 +266,9 @@ const how = [
         </ul>
       </section>
 
-      <section class="section how" id="how" aria-labelledby="how-title">
-        <h2 id="how-title">How it works</h2>
+      <section class="section how" id="how" aria-labelledby="how-title" data-reveal>
+        <p class="kicker">The flow</p>
+        <h2 id="how-title">How it <em>works</em></h2>
         <ol class="how-steps">
           {
             how.map((s) => (
@@ -250,7 +286,8 @@ const how = [
         </a>
       </section>
 
-      <section class="band trust" id="privacy" aria-labelledby="privacy-title">
+      <section class="band trust" id="privacy" aria-labelledby="privacy-title" data-reveal>
+        <p class="kicker">Privacy</p>
         <h2 id="privacy-title">Private <em>by default</em></h2>
         <div class="trust-grid">
           <div class="glass trust-card">
@@ -272,12 +309,15 @@ const how = [
       </section>
     </main>
 
-    <footer class="foot">
+    <footer class="foot" data-reveal>
       <div class="foot-inner">
-        <p class="wordmark">
-          <span class="mark" aria-hidden="true"><span></span><span></span><span></span></span>
-          MolBhav
-        </p>
+        <div class="foot-brand">
+          <p class="wordmark">
+            <span class="mark" aria-hidden="true"><span></span><span></span><span></span></span>
+            MolBhav
+          </p>
+          <p class="foot-line">Know your floor <em>before they name their price.</em></p>
+        </div>
         <nav aria-label="Footer">
           <ul>
             <li><a href="#how">How it works</a></li>
@@ -285,9 +325,15 @@ const how = [
             <li><a href={appUrl}>Try it</a></li>
           </ul>
         </nav>
-        <p>Not legal or tax advice.</p>
-        <p>A solo student project in active development.</p>
+        <div class="foot-small">
+          <p>Not legal or tax advice.</p>
+          <p>A solo student project in active development.</p>
+        </div>
       </div>
     </footer>
+    <script>
+      import { startReveals } from '../lib/reveal.ts';
+      startReveals();
+    </script>
   </body>
 </html>

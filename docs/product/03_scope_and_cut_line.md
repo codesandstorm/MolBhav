@@ -10,7 +10,7 @@ S1 Deal setup → S2 Price ladder (+S3 benchmark) → paste client reply → S4b
 ```
 
 ## Phases
-Order: A → A2 → B1 → B2 → C → D → SC → E. Stack per [09_architecture.md](09_architecture.md) (option B). Re-estimated for D8 (comfortable with React/Three.js/GSAP) on 2026-11-10; the change log is in [10_roadmap_update.md](10_roadmap_update.md) [HYPOTHESIS: all hours].
+Order: A → A2 → B1 → B2 → C → D → SC → E. Stack per [09_architecture.md](09_architecture.md) (option B; GSAP removed 2026-11-11, replaced by our own scroll module: [15_design_language.md](15_design_language.md) §7). Re-estimated for D8 (comfortable with React/Three.js/GSAP) on 2026-11-10; the change log is in [10_roadmap_update.md](10_roadmap_update.md) [HYPOTHESIS: all hours].
 
 | Phase | Builds | Hours (services + UI) | Exit demo (what can be shown) | Exit criteria |
 |---|---|---|---|---|
@@ -49,7 +49,7 @@ A phase's scope is fixed when the phase starts. New ideas go to a backlog for th
 | D5 | Compliance cards hidden until verified | **APPROVED 2026-11-10** | hidden | shown → looks like advice even with a badge |
 | D6 | CraigslistBargain as research-use training data | **APPROVED 2026-11-10** | yes, disclosed | drop → much less PRICE/PUSHBACK training data [EVIDENCE: docs/dataset-audit/AUDIT_REPORT.md §1] |
 | D7 | Final name "MolBhav" | **APPROVED 2026-11-10** | keep for now | small while there is no public launch |
-| D8 | Frontend | **APPROVED 2026-11-10** | comfortable with React, Three.js and GSAP; "just want the best product". Direction: an immersive, scroll-driven 3D showcase site (inspired by studio sites such as lusion.co, principles only) plus a calm, fast, accessible working app. Stack recommended in [09_architecture.md](09_architecture.md) | a mismatched stack slows every phase |
+| D8 | Frontend | **APPROVED 2026-11-10** | comfortable with React, Three.js and GSAP; "just want the best product". Direction: an immersive, scroll-driven 3D showcase site (inspired by studio sites such as lusion.co, principles only) plus a calm, fast, accessible working app. Stack recommended in [09_architecture.md](09_architecture.md). Update 2026-11-11: GSAP is no longer in the stack; scroll is read by our own tested module (`apps/site/src/lib/scroll-progress.ts`) | a mismatched stack slows every phase |
 | D9 | Dated progress checkpoint? | **APPROVED 2026-11-10: none** | phases end in demos; no dated checkpoint | none: no external date to miss |
 | D10 | Where message analysis runs | **APPROVED 2026-11-10** as recommended | (a) on-device by default; (b) opt-in, in-memory, unlogged server inference only if B2's model wins under the paired-bootstrap rule. Comparison in [02_service_catalogue.md](02_service_catalogue.md) | (b) early → ops + privacy duties before the model is proven |
 | D11 | Label set | **APPROVED 2026-11-10** as recommended | ~300 self-authored messages; 6 learned classes + rule-decided ANCHOR/COUNTER and conditional/unconditional (see [04_research_integrity.md](04_research_integrity.md) §2.3) | 6 classes may hide a distinction a 7th label would catch; revisit after B1 |

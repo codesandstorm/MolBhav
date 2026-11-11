@@ -311,13 +311,31 @@ h1 em {
   position: sticky;
   top: 0;
   z-index: var(--mb-z-raised);
-  height: 46svh;
-  min-height: 17rem;
+  height: 52svh;
+  min-height: 18rem;
   margin-inline: calc(-1 * var(--mb-space-4));
+  /* the atmosphere is shared by poster and live scene: warm light behind the ladder, a
+     copper pool on the ground, and (::after) a vignette that fades into the page */
   background:
-    radial-gradient(ellipse 60% 55% at 50% 62%, var(--mb-glow-color), transparent 70%),
+    radial-gradient(
+      ellipse 46% 34% at 50% 30%,
+      color-mix(in srgb, var(--mb-color-scene-glow) 17%, transparent),
+      transparent 72%
+    ),
+    radial-gradient(
+      ellipse 70% 26% at 50% 94%,
+      color-mix(in srgb, var(--mb-color-scene-copper) 16%, transparent),
+      transparent 75%
+    ),
     var(--mb-color-bg);
   border-bottom: 1px solid var(--mb-color-border);
+}
+.stage::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(ellipse 80% 72% at 50% 46%, transparent 58%, var(--mb-color-bg));
 }
 .poster,
 .scene {
@@ -327,7 +345,6 @@ h1 em {
   height: 100%;
 }
 .poster {
-  padding: var(--mb-space-4);
   transition: opacity var(--mb-duration-slow) var(--mb-ease-settle);
 }
 .stage[data-hero='live'] .poster {
@@ -406,11 +423,19 @@ h1 em {
 .story {
   padding-block: var(--mb-space-8) var(--mb-space-7);
 }
+.kicker {
+  margin: 0 0 var(--mb-space-3);
+  font-size: var(--mb-text-xs);
+  font-weight: var(--mb-weight-strong);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--mb-color-accent);
+}
 .story h2,
 .band h2,
 .section h2 {
   font-family: var(--mb-font-display);
-  font-size: var(--mb-text-3xl);
+  font-size: clamp(var(--mb-text-3xl), 2rem + 2.6vw, var(--mb-text-display));
   line-height: var(--mb-leading-tight);
   font-weight: var(--mb-weight-strong);
   letter-spacing: -0.01em;
@@ -482,13 +507,71 @@ h1 em {
 /* ── Bands and sections ─────────────────────────────────────────────── */
 .band,
 .section {
-  padding: var(--mb-space-8) max(var(--mb-space-4), calc((100% - 72rem) / 2));
+  padding: var(--mb-space-9) max(var(--mb-space-4), calc((100% - 72rem) / 2));
+}
+.band h2 em,
+.section h2 em {
+  font-weight: var(--mb-weight-regular);
+}
+
+/* reveal on scroll (lib/reveal.ts): only hidden when that script runs with motion allowed */
+[data-motion='on'] [data-reveal]:not(.is-in) {
+  opacity: 0;
+  transform: translateY(1.5rem);
+}
+[data-reveal] {
+  transition:
+    opacity var(--mb-duration-slow) var(--mb-ease-settle),
+    transform var(--mb-duration-slow) var(--mb-ease-settle);
+}
+
+/* ── The real app, in a glass frame ─────────────────────────────────── */
+.product {
+  display: grid;
+  gap: var(--mb-space-7);
+  align-items: center;
+}
+.product-copy .lede {
+  max-width: 30rem;
+  margin-bottom: var(--mb-space-6);
+}
+.device-wrap {
+  margin: 0;
+  display: grid;
+  justify-items: center;
+  gap: var(--mb-space-4);
+  background: radial-gradient(
+    ellipse 55% 45% at 50% 45%,
+    color-mix(in srgb, var(--mb-color-scene-glow) 12%, transparent),
+    transparent 75%
+  );
+}
+.device {
+  --rise: 1;
+  width: min(19rem, 82vw);
+  padding: var(--mb-space-2);
+  border-radius: calc(var(--mb-radius-lg) + var(--mb-space-2));
+  box-shadow: var(--mb-shadow-2), var(--mb-glow);
+  transform: translateY(calc((1 - var(--rise)) * 3rem)) rotate(calc((1 - var(--rise)) * -3deg))
+    scale(calc(0.94 + var(--rise) * 0.06));
+  opacity: calc(0.35 + var(--rise) * 0.65);
+}
+.device img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: var(--mb-radius-lg);
+  background: var(--mb-color-bg);
+}
+.device-wrap figcaption {
+  font-size: var(--mb-text-sm);
+  color: var(--mb-color-text-muted);
 }
 .band {
   background: var(--mb-color-bg-band);
   border-block: 1px solid var(--mb-color-border);
 }
-.band-head p {
+.band-head > p {
   color: var(--mb-color-text-muted);
   max-width: 28rem;
 }
@@ -509,67 +592,24 @@ h1 em {
   color: var(--mb-color-text-muted);
 }
 
-/* line icons, drawn in CSS in the accent colour */
+/* pillar icons: one inline SVG set (components/Icon.astro) on a small lit tile */
+.icon-tile {
+  display: inline-grid;
+  place-items: center;
+  width: 3rem;
+  height: 3rem;
+  border-radius: var(--mb-radius-md);
+  border: 1px solid var(--mb-glass-border);
+  background:
+    radial-gradient(circle at 50% 0%, var(--mb-glow-color), transparent 70%),
+    var(--mb-color-surface);
+  box-shadow: inset 0 1px 0 var(--mb-glass-rim);
+  color: var(--mb-color-accent);
+}
 .icon {
-  position: relative;
   display: block;
-  width: 2.25rem;
-  height: 2.25rem;
-}
-.icon::before,
-.icon::after {
-  content: '';
-  position: absolute;
-  border: 2px solid var(--mb-color-accent);
-}
-.icon-exact::before,
-.icon-exact::after {
-  left: 0.25rem;
-  right: 0.25rem;
-  height: 0;
-  border-width: 2px 0 0;
-}
-.icon-exact::before {
-  top: 0.8rem;
-}
-.icon-exact::after {
-  top: 1.35rem;
-}
-.icon-label::before {
-  inset: 0.6rem 0.1rem;
-  border-radius: var(--mb-radius-pill);
-}
-.icon-label::after {
-  top: 1rem;
-  left: 0.55rem;
-  width: 0.3rem;
-  height: 0.3rem;
-  border-radius: 50%;
-  background: var(--mb-color-accent);
-}
-.icon-device::before {
-  inset: 0.1rem 0.55rem;
-  border-radius: 0.35rem;
-}
-.icon-device::after {
-  bottom: 0.4rem;
-  left: 50%;
-  width: 0.35rem;
-  height: 0;
-  border-width: 2px 0 0;
-  transform: translateX(-50%);
-}
-.icon-practise::before {
-  inset: 0.15rem;
-  border-radius: 50%;
-}
-.icon-practise::after {
-  top: 0.75rem;
-  left: 0.9rem;
-  width: 0;
-  height: 0;
-  border-width: 0.38rem 0 0.38rem 0.6rem;
-  border-color: transparent transparent transparent var(--mb-color-accent);
+  width: 1.5rem;
+  height: 1.5rem;
 }
 
 .how-steps {
@@ -621,21 +661,42 @@ h1 em {
 
 /* ── Footer ─────────────────────────────────────────────────────────── */
 .foot {
-  padding: var(--mb-space-7) var(--mb-space-4) var(--mb-space-8);
+  position: relative;
+  padding: var(--mb-space-8) var(--mb-space-4) var(--mb-space-8);
   font-size: var(--mb-text-sm);
   color: var(--mb-color-text-muted);
+  background: linear-gradient(var(--mb-color-bg-band), var(--mb-color-bg));
+}
+.foot::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--mb-glass-rim), transparent);
 }
 .foot-inner {
   display: grid;
-  gap: var(--mb-space-2);
+  gap: var(--mb-space-6);
   max-width: 72rem;
   margin: 0 auto;
 }
 .foot .wordmark {
-  font-size: var(--mb-text-md);
+  font-size: var(--mb-text-lg);
 }
 .foot p {
   margin: 0;
+}
+.foot-line {
+  margin-top: var(--mb-space-2);
+  font-family: var(--mb-font-display);
+  font-size: var(--mb-text-xl);
+  color: var(--mb-color-text);
+}
+.foot-small {
+  display: grid;
+  gap: var(--mb-space-1);
+  padding-top: var(--mb-space-5);
+  border-top: 1px solid var(--mb-color-border);
 }
 .foot nav ul {
   flex-wrap: wrap;
@@ -653,6 +714,9 @@ h1 em {
   }
 }
 @media (min-width: 40rem) {
+  .stage {
+    height: 62svh;
+  }
   .pillars {
     grid-template-columns: 1fr 1fr;
   }
@@ -671,13 +735,20 @@ h1 em {
     align-items: end;
     gap: var(--mb-space-6);
   }
-  .band-head p {
+  .band-head > p {
     margin: 0;
     text-align: end;
   }
   .foot-inner {
     grid-template-columns: 1fr auto;
-    align-items: center;
+    align-items: start;
+  }
+  .foot-small {
+    grid-column: 1 / -1;
+    grid-template-columns: 1fr auto;
+  }
+  .product {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   }
 }
 @media (min-width: 64rem) {
@@ -685,14 +756,14 @@ h1 em {
     padding-inline: var(--mb-space-6);
   }
   .journey {
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr);
+    grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
     column-gap: var(--mb-space-7);
     padding-inline: var(--mb-space-6);
   }
   .hero {
     grid-column: 1;
     grid-row: 1;
-    min-height: calc(100svh - 5rem);
+    min-height: calc(100svh - 11rem);
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -700,31 +771,29 @@ h1 em {
   }
   .stage {
     grid-column: 2;
-    grid-row: 1 / span 3;
+    grid-row: 1 / span 4;
     align-self: start;
-    top: 4svh;
-    height: 88svh;
-    margin: 0;
+    top: 2svh;
+    height: 96svh;
+    margin: 0 calc(-1 * var(--mb-space-6)) 0 0;
     border-bottom: 0;
-    background: radial-gradient(ellipse 55% 50% at 50% 62%, var(--mb-glow-color), transparent 70%);
   }
+  /* beside the ladder, never over it */
   .example-card {
-    grid-column: 2;
-    grid-row: 1;
-    align-self: end;
+    grid-column: 1;
+    grid-row: 2;
     justify-self: start;
-    z-index: var(--mb-z-sticky);
-    width: min(22rem, 100%);
-    margin: 0 0 var(--mb-space-8) calc(-1 * var(--mb-space-6));
+    width: min(26rem, 100%);
+    margin: 0 0 var(--mb-space-6);
   }
   .stage-alt {
     grid-column: 1;
-    grid-row: 2;
+    grid-row: 3;
     margin-top: 0;
   }
   .story {
     grid-column: 1;
-    grid-row: 3;
+    grid-row: 4;
     padding-bottom: 24svh;
   }
   .step {

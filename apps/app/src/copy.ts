@@ -72,6 +72,14 @@ export const copy = {
       target_to_opening: 'Your quote is between your target and opening',
       at_or_above_opening: 'Your quote is at or above your opening',
     },
+    // the bracket after the quote position: amounts are worked in BigInt by the caller
+    quoteDiff: {
+      above: (amount: string, rung: 'floor' | 'opening') => `${amount} above your ${rung}`,
+      below: (amount: string) => `${amount} below your floor`,
+      exactly: (rung: 'floor' | 'opening') => `exactly your ${rung}`,
+    },
+    track: 'Where your quote sits on a line from your floor to your opening',
+    ticks: { floor: 'Floor', target: 'Target', opening: 'Opening', quote: 'Your quote' },
     edit: 'Change inputs',
     evidence: 'Evidence log',
     save: 'Saved on this device',

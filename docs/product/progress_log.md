@@ -40,3 +40,14 @@ Phase A2 session total: ~0.6 h [CALCULATION: 03:16 → 03:50]. Planned: 20 h [EV
 Phase A2 revision session total: ~0.7 h [CALCULATION: 03:54 → 04:36]. Phase A2 including the first pass: ~1.3 h [CALCULATION: 0.6 + 0.7].
 
 Session total so far: ~1.8 h [CALCULATION: 01:38–01:41, 02:28–02:46, 02:58–03:02 and 03:04–03:07, rounded up, 03:16–03:50 and 03:54–04:36]. Planned for Phase A: 34 h [EVIDENCE: docs/product/03_scope_and_cut_line.md]. The gap is mostly your review time, which this column does not count.
+
+### Phase A2.1 · polish (branch `phase-a2-polish`)
+| Date | Part | Actual (session) h | Actual (Sandarbh) h | Status / notes |
+|---|---|---|---|---|
+| 2026-11-11 | Showcase: one scene model for poster and live (camera, materials, atmosphere, motes, parallax, ribbon), hero re-composition | ~0.5 (04:45–04:53, 10:04–10:25) | — | done; tokens unchanged (lock test green); poster vs first live frame 0.977 (1280 px) / 0.978 (360 px) |
+| 2026-11-11 | Product shot, pillar icon set, section rhythm, reveals, footer | (in the row above) | — | done; product shot 41 KB WebP, lazy, same-origin |
+| 2026-11-11 | App: quote track labels and bracket wording; 360/768/1280 review (ladder two-column, evidence table, welcome mini ladder) | ~0.1 (10:15–10:22) | — | done; no behaviour change; S7 test green |
+| 2026-11-11 | App e2e 5× on a fresh build; axe one-off | ~0.05 (10:22–10:26) | — | 20/20 pass; cause not proven (an orphaned preview server from the earlier session was being reused) |
+| 2026-11-11 | Screenshots, docs 03/08/09/15, README; budget 5× | ~0.3 (10:26–11:00) | — | **TBT before interaction fails in 2 of 5 runs** (88–333 ms vs 200 ms); an interleaved A/B against the A2 build (HEAD) on the same machine gives the same result for both (TBT median 272 vs 235 ms), so the machine was loaded (CPU ≈ 60 % from other apps), not A2.1; budget not loosened. A second 5× run (10:58) passed every budget: TBT 40 / 73 / 136 ms |
+
+Phase A2.1 session total: ~1.0 h [CALCULATION: 04:45–04:53 and 10:04–11:00, rounded up].

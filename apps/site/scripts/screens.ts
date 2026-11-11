@@ -4,7 +4,8 @@
  *   npm run build -w apps/app && npm run preview -w apps/app
  *   npm run build -w apps/site && npm run preview -w apps/site
  *   node apps/site/scripts/screens.ts
- * JPEG at quality 72; the script fails if any file is 300 KB or more.
+ * JPEG at quality 72; the script fails if any file is 300 KB or more. hero-before-*.jpg (the
+ * A2 hero, kept for the before/after pair) are never deleted; hero-after-*.jpg are rewritten.
  */
 import { chromium, type Page } from '@playwright/test';
 import { mkdirSync, readdirSync, rmSync, statSync } from 'node:fs';
@@ -12,7 +13,8 @@ import { join } from 'node:path';
 
 const out = join(import.meta.dirname, '..', '..', '..', 'docs', 'product', 'screens');
 mkdirSync(out, { recursive: true });
-for (const f of readdirSync(out)) if (/\.(jpe?g|png)$/.test(f)) rmSync(join(out, f));
+for (const f of readdirSync(out))
+  if (/\.(jpe?g|png)$/.test(f) && !f.startsWith('hero-before-')) rmSync(join(out, f));
 
 const widths = [360, 768, 1280] as const;
 const heightOf = (w: number) => (w === 360 ? 740 : w === 768 ? 1024 : 800);
@@ -72,16 +74,18 @@ for (const width of widths) {
   await sp.evaluate(() => scrollTo(0, 0));
   await sp.waitForTimeout(1500);
   await shot(sp, `site-hero-live-${width}`);
+  await shot(sp, `hero-after-${width}`);
   await sp.locator('.step-opening').evaluate((e) => e.scrollIntoView({ block: 'center' }));
   await sp.waitForTimeout(1800);
   await shot(sp, `site-ladder-story-${width}`);
   for (const [name, sel] of [
+    ['site-product', '.product'],
     ['site-pillars', '.why'],
     ['site-how', '#how'],
     ['site-trust', '#privacy'],
   ] as const) {
     await sp.locator(sel).evaluate((e) => e.scrollIntoView({ block: 'start' }));
-    await sp.waitForTimeout(500);
+    await sp.waitForTimeout(900); // the section reveal (480 ms) and the product shot's rise
     await shot(sp, `${name}-${width}`);
   }
   await sp.evaluate(() => scrollTo(0, document.documentElement.scrollHeight));

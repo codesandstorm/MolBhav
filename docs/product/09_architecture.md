@@ -16,12 +16,12 @@ Fixed inputs: D8 = comfortable with React, Three.js and GSAP, wants the best pro
 | Solo effort | one framework | two small build configs (Astro is thin) | two UIs, store accounts, review cycles [UNVERIFIED: store fees/process not checked] |
 | Hosting | best on Vercel; Hobby is "personal, non-commercial use" only (https://vercel.com/docs/plans/hobby) | any static host | stores + static host |
 | Lock-in | medium | low | medium |
-**Recommendation: B.** It makes the two hard rules structural instead of a matter of discipline: the showcase renders text first and the app never ships 3D code. React/R3F/GSAP skills (D8) are all used, inside Astro islands. Cost of being wrong: if the showcase and app later need shared routing or server rendering, moving the app into Next.js is a port of one SPA, not a rewrite [HYPOTHESIS]. C is the best later step if pasting turns out to be the friction point (A9) [EVIDENCE: 04_research_integrity.md §3]; a PWA **Web Share Target** may give part of that win on Android without an app [UNVERIFIED: browser support not checked] [GAP: spike 2 h].
+**Recommendation: B.** It makes the two hard rules structural instead of a matter of discipline: the showcase renders text first and the app never ships 3D code. React and R3F skills (D8) are used inside one Astro island. GSAP was in the original plan and was removed on 2026-11-11: a small, unit-tested scroll module of our own reads scroll positions instead (`apps/site/src/lib/scroll-progress.ts`), so the showcase carries one dependency fewer and no scroll-jacking library. Cost of being wrong: if the showcase and app later need shared routing or server rendering, moving the app into Next.js is a port of one SPA, not a rewrite [HYPOTHESIS]. C is the best later step if pasting turns out to be the friction point (A9) [EVIDENCE: 04_research_integrity.md §3]; a PWA **Web Share Target** may give part of that win on Android without an app [UNVERIFIED: browser support not checked] [GAP: spike 2 h].
 
 ## 2. Repository layout (option B)
 ```
-apps/site        Astro, static; React islands: R3F + GSAP ScrollTrigger scenes, posters
-apps/app         Vite + React + TypeScript PWA; IndexedDB; no three/gsap dependency (lint rule)
+apps/site        Astro, static; one React island: R3F scene loaded after the first interaction; build-time poster; own scroll module
+apps/app         Vite + React + TypeScript PWA; IndexedDB; never imports three, @react-three/* or gsap (lint rule)
 packages/engine  pure TS: price ladder, planner, debrief, number post-check (no I/O)
 packages/analyser pure TS: amount parser + rule baseline, runs in a Web Worker
 packages/tokens  colours, type, spacing (shared by site and app)
@@ -113,6 +113,6 @@ Cost today: **₹0** for hosting [CALCULATION: all chosen tiers are free]; the L
 - **Authoring:** Blender → glTF 2.0; low-poly, matte clay/brass, baked lighting (no real-time shadows, no environment maps) [HYPOTHESIS: cheapest look that fits 08].
 - **Compression:** `gltf-transform` with Meshopt (or Draco) for geometry, KTX2/Basis for textures, textures ≤ 1024²; instancing for repeated objects (weights, beads, tiles) [UNVERIFIED: tool flags to confirm in A2].
 - **Loading:** a scene mounts only when within ~1 viewport of the screen (IntersectionObserver); poster image (AVIF/WebP) is the Suspense fallback; scenes dispose geometry/textures when far away.
-- **Runtime:** one shared canvas where possible; R3F `frameloop="demand"`; device-pixel-ratio capped at 1.5; GPU tiering decides 3D vs poster; scroll drives one GSAP ScrollTrigger timeline value per scene that the scene reads (no per-frame React re-renders).
+- **Runtime:** one shared canvas where possible; R3F `frameloop="demand"`; device-pixel-ratio capped at 1.5; GPU tiering decides 3D vs poster; scroll drives one progress value per scene, read at most once per frame by our own module (`scroll-progress.ts`: `watchProgress`, `piecewise`, `follow`) and eased in the frame loop (no per-frame React re-renders, no GSAP). The poster is projected at build time from the same scene model as the live scene (`scene-model.ts`, `poster.ts`).
 - **Fallback triggers:** no WebGL, Save-Data, low GPU tier, reduced motion, or measured fps < 30 for 2 s → poster + HTML.
 - **Budget enforcement:** Lighthouse CI fails the build when over budget; asset sizes checked by a script against the per-scene 1.5 MB cap.

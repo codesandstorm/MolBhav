@@ -71,9 +71,23 @@ Glass, glow and gradient tokens: `--mb-glass-fill` (tint `#1E1918` at 0.86), `--
 **Every pair in use** (41 pairs plus 7 on-glass checks, all WCAG AA): text 14.3–18.0:1 · textMuted 7.2–9.0:1 · accent 10.9–13.7:1 · rung colours 6.9–15.5:1 · chips 9.4–11.0:1 · danger 7.8–9.8:1 · focus 13.1–14.6:1 (UI) · borderStrong 4.3–4.8:1 (UI) · scene marks 4.2–15.5:1 (UI) [EVIDENCE: `npx vitest run` in packages/tokens].
 
 ## 5. Showcase visual style: stone, glass and light
-**Scene** (procedural only): two thin glass rails; three faceted stones at the foot (dodecahedra, flat-shaded); the **floor** a flattened faceted stone slab; the **target** a glass capsule; the **opening** an unlit capsule of light with an additive back-face halo and a warm point light whose strength follows the rung. Light comes from a warm hemisphere light, a warm key from the upper right and a copper back light. The background is transparent over a CSS radial glow.
+**One scene model, two renderers** (A2.1). Camera, framing, geometry and shading live in one pure module; the live scene (WebGL) and the poster (SVG, projected at build time) are both drawn from it, so the poster is the live scene's first frame by construction [EVIDENCE: apps/site/src/lib/scene-model.ts, poster.ts; apps/site/test/scene-model.test.ts].
+- **Framing:** the eye never moves to fit the stage; only the zoom changes (`fitZoom`). A zoomed perspective picture is the same picture scaled, so the poster's fixed viewBox with "meet" frames the scene exactly as the live canvas does at 360, 768 and 1280 px.
+- **Materials** (each a small shader; the poster runs the same formula in TypeScript on raw sRGB values, with no tone mapping and no colour management, so the arithmetic is identical):
 
-**Cheap glass**: one fresnel `ShaderMaterial`. It has a tint in the middle, the rim colour at grazing angles, and a lighter top face as fake transmission, with no transmission pass, no environment map and no HDRI. Scene code is 237 KB gzip measured [EVIDENCE: apps/site/src/components/LadderScene.tsx; .budget/report.json].
+| Element | Look | Formula (scene-model.ts) |
+|---|---|---|
+| Stones (4) and the floor slab | faceted (seeded, jittered icosahedra with a flat base), dark body, **copper rim** at the silhouette and from a copper back light, warm top glow from the opening | `shadeStone`: key light² × stone + copper × (fresnel⁴ + back light³) |
+| Rails | thin glass, rim in `sceneGlow` | `shadeGlass` (`GLASS.rail`) |
+| Target rung | glass with a **fresnel edge highlight** in copper and a specular glint | `shadeGlass` (`GLASS.target`) |
+| Opening rung | a bar of light, copper at its edges; an elliptical additive halo | `shadeLight`, `haloAlpha` |
+| Ribbon | one glass strip sweeping round the ladder (120 segments, one full twist, so it closes without a seam), fake glass, split into a back and a front half so it passes behind and in front of the rungs | `shadeGlass` (`GLASS.ribbon`) |
+| Dust motes | 120 instanced points (≤ 150), soft discs, additive, drifting upwards | `motes()` |
+
+- **Atmosphere** (CSS, shared by poster and canvas, no post-processing): warm light behind the ladder and a copper pool on the ground (radial gradients of `sceneGlow` and `sceneCopper`), and a vignette that fades into `bg` [EVIDENCE: apps/site/src/styles/site.css `.stage`].
+- **Render order = painter's order:** back half of the ribbon, rails, stones and slab, target, opening and halo, front half of the ribbon, motes. Stones that overlap a rail are placed in front of it, so both renderers agree.
+- **Poster vs first live frame:** reported in the budget run as a similarity number (1 − mean absolute RGB difference over the lit pixels, at quarter size); report-only, with the proposed threshold in 08 §8.3.
+- **Ambient motion:** motes render at up to 30 fps only while the stage is on screen and the tab is visible; ambient motion stops for good if frames arrive too slowly. Pointer (mouse only) and device tilt move the camera a little (eased, 220 ms half-life); nothing needs it, and under reduced motion the scene never loads [EVIDENCE: LadderScene.tsx `Ambient`, `ParallaxInput`; hero.spec.ts "drawing stops off screen"].
 
 **Choreography** (native scroll, nothing pinned) [EVIDENCE: apps/site/src/lib/choreography.ts; tests in apps/site/test/choreography.test.ts]:
 1. Scroll position 0 is the hero, with the ladder assembled exactly as the poster draws it, so the live scene takes over without a visible jump.
@@ -81,7 +95,20 @@ Glass, glow and gradient tokens: `--mb-glass-fill` (tint `#1E1918` at 0.86), `--
 3. The floor, the target and the opening then rise one at a time. Each one finishes when the middle of its caption reaches the reading line (60 % down the viewport), at any width (`anchorsFor` + `piecewise`).
 4. Progress is eased with a frame-rate-independent 90 ms half-life follow (`follow`).
 
-**Posters**: one SVG drawn from the same per-mille heights and scale. It is the first frame, and the picture under reduced motion, without WebGL, with Save-Data, and after any failure.
+**Poster**: the projected SVG above. It is the first frame, and the picture under reduced motion, without WebGL, with Save-Data, and after any failure.
+
+**Showcase components** (apps/site):
+
+| Component | Default | States |
+|---|---|---|
+| **Pillar icon** (`Icon.astro`) | one inline-SVG set on a 24 px grid, stroke 1.6, round ends, `currentColor` = `accent`, on a 48 px lit tile: calculator (exact numbers), tag with a tick (every claim labelled), phone with a lock (private on your device), two speech bubbles (practise, with the Planned chip) | decorative (`aria-hidden`); the heading says it in words |
+| **Kicker** (`.kicker`) | small uppercase accent label above each section heading | — |
+| **Section heading** | Fraunces, from `text-3xl` up to `text-display`, italic emphasis in `accent` | — |
+| **Device frame** (`.device`) | glass frame around the real app's ladder screen (`public/product/app-ladder.webp`, lazy, 41 KB), caption "The real app (example data, made up)" | rises and settles as it scrolls in (`--rise`, our scroll module); static under reduced motion or without JavaScript |
+| **Reveal** (`[data-reveal]`) | sections fade and rise 1.5 rem once, when scrolled to | shown at once on keyboard focus; never hidden without JavaScript or under reduced motion |
+| **Footer** | gradient band, glass rim line, wordmark, the promise line, nav, small print | — |
+
+The product shot is made by `apps/site/scripts/product-shot.ts` from the running app's own example deal. It is not part of the build; rerun it when the ladder screen changes.
 
 ## 6. Components (apps/app/src/components)
 | Component | Default | Hover | Focus-visible | Active | Disabled | Error |
@@ -94,10 +121,13 @@ Glass, glow and gradient tokens: `--mb-glass-fill` (tint `#1E1918` at 0.86), `--
 | **Chip** (`.chip`, `Planned`) | opaque `chipBg`, small caps-like label; "Planned" in `plannedText` | — | — | — | — | — |
 | **Field** (`Field`) | label, hint (`data-rule`), 48 px sunken input row, optional ₹ prefix | border lightens | ring around the whole row | — | — | `danger` border, icon + message (`role="alert"`, `aria-describedby`) |
 | **Choice** (segmented radios) | pills, real radio inputs | `surfaceRaised` | ring around the pill | — | — | checked: peach border, raised fill |
+| **Quote track** (ladder screen) | a line from floor to opening (widened to include the quote), ticks for the three rungs, a dot for the quote, and the words Floor, Target, Opening under the ticks (spread so they never collide); one sentence for screen readers (`role="img"`) | — | — | — | — | below the floor: the dot turns `danger` |
 | **Rung** (`Rung`) | name (Fraunces) + tagline, value with CALCULATION chip, bar; **opening**: gradient border and glow · **target**: glass with copper top rim · **floor**: stone gradient | — | — | — | — | — |
 | **Disclosure** (`Disclosure`) | native `details`, closed by default, chevron | `surfaceRaised` | ring | chevron turns (200 ms) | — | — |
 | **Top bar** (`TopBar`) | sticky glass (94 %), wordmark with the three-rung mark, one nav item ("Settings and privacy"): only screens that exist | — | ring | — | — | current page in peach |
 | **Toast** (`Toast`) | fixed bottom pill, glass, `role="status"`; never shifts layout | — | — | — | — | — |
+
+A2.1 layout: on desktop the ladder screen puts the rungs and the room line in one column and the quote, working and actions in a second, sticky column, so there is no empty area under the rungs; the evidence table keeps whole words (a fixed "What" column, a wider page on desktop); the welcome's mini ladder sits on a lit panel with rails.
 
 The screens use only these: welcome, setup (two glass groups, "Add more detail" toggle), ladder (three rungs, concession-room line, quote track, trace disclosure), evidence log (a table that stacks into cards below 40 rem), settings and privacy (what stays, what never leaves, delete everything) [EVIDENCE: apps/app/src/screens; screenshots in docs/product/screens/app-*].
 
@@ -112,7 +142,8 @@ The screens use only these: welcome, setup (two glass groups, "Add more detail" 
 - Only `opacity` and `transform` animate, so nothing shifts layout [EVIDENCE: apps/*/src/**/*.css; CLS 0.001 in the budget run].
 - `prefers-reduced-motion: reduce` sets every duration to 0 ms, and both stylesheets disable animation and transition. In the showcase the 3D island is never hydrated, so no animation code is downloaded [EVIDENCE: apps/site/e2e/hero.spec.ts "reduced motion"].
 - 3D loads only after the first scroll, wheel, touch, pointer press or key press. Pointer movement does not count, because browsers may synthesise it [EVIDENCE: apps/site/src/lib/first-interaction.ts and its tests].
-- No autoplay, no scroll-jacking, no pinning, no smooth-scroll override, no preloader, no audio.
+- No autoplay, no scroll-jacking, no pinning, no smooth-scroll override, no preloader, no audio. Ambient motes and parallax are the only motion not driven by scroll; both stop off screen and never run under reduced motion.
+- Section reveals and the product shot's rise use `--mb-duration-slow` and `--mb-ease-settle`, and animate only opacity and transform.
 - Below 30 fps for 2 s while animating, or on a lost WebGL context, the scene hands back to the poster [EVIDENCE: apps/site/src/lib/fps-guard.ts; hero.spec.ts].
 
 ## 8. Spacing, radius, elevation, layers
@@ -135,6 +166,8 @@ This language is **LOCKED v1.0**. To change any token:
 
 Get the hash with: `node -e "const c=require('crypto'),fs=require('fs');console.log(c.createHash('sha256').update(fs.readFileSync('packages/tokens/src/index.ts','utf8').replace(/\r\n/g,'\n')).digest('hex'))"`.
 
+**A2.1 polish (2026-11-11): no token changed.** The token source still hashes to the v1.0 row, so no new row was added; every new colour in A2.1 (scene shading, atmosphere, icons) is mixed from existing tokens.
+
 Limits [GAP]: the test cannot stop someone from editing the hash in an existing row. Review catches that, because changelog rows are append-only by rule.
 
 | Version | Date | Change and reason | Screenshots (before → after) | Token source sha256 |
@@ -149,5 +182,7 @@ Limits [GAP]: the test cannot stop someone from editing the hash in an existing 
 | three | 0.187.0 | MIT | site (3D chunk) |
 | @react-three/fiber | 9.8.2 | MIT | site (3D chunk) |
 | Scroll progress | our own (`apps/site/src/lib/scroll-progress.ts`) | project code | site (3D chunk) |
-| Ladder geometry, glass shaders, poster SVG, CSS icons, favicon | — | made for MolBhav | site, app |
-GSAP was removed in this revision (decision 3) [EVIDENCE: apps/site/package.json; package-lock.json has no `gsap`]. No models, textures, HDRIs, images or audio are downloaded [EVIDENCE: apps/site/e2e/budget.spec.ts].
+| Scene model, shaders, projected poster, pillar icon set, favicon | — | made for MolBhav | site, app |
+| Product shot (`app-ladder.webp`) | generated from apps/app | project output | site |
+
+GSAP was removed in A2 (decision 3) [EVIDENCE: apps/site/package.json; package-lock.json has no `gsap`]. No models, textures, HDRIs or audio are downloaded; the only image is the product shot, loaded lazily from the same origin [EVIDENCE: apps/site/e2e/budget.spec.ts, hero.spec.ts].
