@@ -5,11 +5,12 @@ import { emptyForm, errorField, exampleForm, toLadderInput, type DealForm } from
 import { Setup } from './screens/Setup.tsx';
 import { Ladder } from './screens/Ladder.tsx';
 import { Evidence, Settings, Welcome } from './screens/Other.tsx';
+import { emptyReader, Reader, type ReaderState } from './screens/Reader.tsx';
 import { TopBar } from './components/ui.tsx';
 import { claimsFor } from './claims.ts';
 import { deleteEverything, listDeals, newId, saveDeal, type StoredDeal } from './storage.ts';
 
-type Screen = 'welcome' | 'setup' | 'ladder' | 'evidence' | 'settings';
+type Screen = 'welcome' | 'setup' | 'ladder' | 'evidence' | 'settings' | 'reader';
 
 export function App() {
   const [screen, setScreen] = useState<Screen>('welcome');
@@ -18,6 +19,17 @@ export function App() {
   const [result, setResult] = useState<LadderOk | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [deals, setDeals] = useState<StoredDeal[]>([]);
+  // the reader's message and results live in memory only, never in storage
+  const [reader, setReader] = useState<ReaderState>(emptyReader);
+  const [readerFrom, setReaderFrom] = useState<Screen>('welcome');
+  const patchReader = useCallback(
+    (patch: Partial<ReaderState>) => setReader((r) => ({ ...r, ...patch })),
+    [],
+  );
+  const openReader = (from: Screen) => {
+    setReaderFrom(from);
+    setScreen('reader');
+  };
 
   const refresh = useCallback(() => {
     listDeals()
@@ -73,6 +85,7 @@ export function App() {
             }}
             onExample={() => void calculate(exampleForm, null)}
             onOpen={(d) => void calculate(d.form, d.id)}
+            onReader={() => openReader('welcome')}
           />
         )}
         {screen === 'setup' && (
@@ -89,10 +102,18 @@ export function App() {
             isExample={form.name === exampleForm.name}
             onEdit={() => setScreen('setup')}
             onEvidence={() => setScreen('evidence')}
+            onReader={() => openReader('ladder')}
           />
         )}
         {screen === 'evidence' && result && (
           <Evidence claims={claimsFor(form, result)} onClose={() => setScreen('ladder')} />
+        )}
+        {screen === 'reader' && (
+          <Reader
+            state={reader}
+            set={patchReader}
+            onBack={() => setScreen(readerFrom === 'ladder' && result ? 'ladder' : 'welcome')}
+          />
         )}
         {screen === 'settings' && (
           <Settings
@@ -102,6 +123,7 @@ export function App() {
               setResult(null);
               setForm(emptyForm);
               setDealId(null);
+              setReader(emptyReader);
             }}
           />
         )}

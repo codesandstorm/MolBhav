@@ -1,0 +1,157 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "molbhav/gold/labels.schema.json",
+  "title": "Gold label row (labels v1 = blind pass 1, v2 = test-retest pass, llm = second annotator)",
+  "description": "Guidelines: ml/gold/GUIDELINES.md. Mirrored by packages/gold/src/schema.ts.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "message_id",
+    "version",
+    "context",
+    "move",
+    "objection",
+    "conditional",
+    "amount",
+    "unsure",
+    "labelled_at",
+    "labelling_seconds"
+  ],
+  "properties": {
+    "message_id": {
+      "type": "string",
+      "pattern": "^m[0-9]{4}$"
+    },
+    "version": {
+      "enum": [
+        "v1",
+        "v2",
+        "llm"
+      ]
+    },
+    "context": {
+      "$ref": "#/$defs/context"
+    },
+    "move": {
+      "enum": [
+        "PRICE_POSITION",
+        "PUSHBACK",
+        "CONCESSION",
+        "INFO_REQUEST",
+        "ACCEPT",
+        "OTHER"
+      ]
+    },
+    "objection": {
+      "enum": [
+        "BUDGET",
+        "SCOPE",
+        "TIMELINE",
+        "PAYMENT_TERMS",
+        "TRUST",
+        "COMPETITOR",
+        "NONE"
+      ]
+    },
+    "conditional": {
+      "type": [
+        "boolean",
+        "null"
+      ],
+      "description": "true/false for CONCESSION only; null otherwise (checked by the validator)"
+    },
+    "amount": {
+      "$ref": "#/$defs/amount"
+    },
+    "unsure": {
+      "type": "boolean"
+    },
+    "labelled_at": {
+      "type": "string",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\.\\d+)?Z$"
+    },
+    "labelling_seconds": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "minimum": 0
+    }
+  },
+  "$defs": {
+    "amount": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "rupees",
+        "rupees_high",
+        "unit",
+        "currency",
+        "ambiguous"
+      ],
+      "properties": {
+        "rupees": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^[1-9][0-9]{0,11}$"
+        },
+        "rupees_high": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^[1-9][0-9]{0,11}$"
+        },
+        "unit": {
+          "enum": [
+            "fixed",
+            "hour",
+            "day",
+            "month",
+            "unspecified",
+            null
+          ]
+        },
+        "currency": {
+          "enum": [
+            "INR",
+            "OTHER",
+            null
+          ]
+        },
+        "ambiguous": {
+          "type": "boolean"
+        }
+      },
+      "description": "Whole rupees as digit strings (never floats). With rupees null, rupees_high, unit and currency are null; otherwise unit and currency are set and rupees_high > rupees (checked by the validator)."
+    },
+    "context": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "quote_rupees",
+        "quote_unit"
+      ],
+      "properties": {
+        "quote_rupees": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^[1-9][0-9]{0,11}$"
+        },
+        "quote_unit": {
+          "enum": [
+            "fixed",
+            "hour",
+            "month",
+            null
+          ]
+        }
+      },
+      "description": "What the labeller was shown about the deal (GUIDELINES §0): the freelancer's quote as whole rupees and its unit, or both null for \"No quote sent yet\". Filled from the card by the tool, never typed by the labeller."
+    }
+  }
+}

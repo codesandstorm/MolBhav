@@ -14,10 +14,14 @@ const useFocus = () => {
 /** Decorative: the three rungs as they look on the ladder screen (stone, glass, glow). */
 function MiniLadder() {
   return (
-    <span className="mini-ladder" aria-hidden="true">
-      <span className="mini-rung mini-opening" />
-      <span className="mini-rung mini-target" />
-      <span className="mini-rung mini-floor" />
+    <span className="mini-stage" aria-hidden="true">
+      <span className="mini-ladder">
+        <span className="mini-rail mini-rail-left" />
+        <span className="mini-rail mini-rail-right" />
+        <span className="mini-rung mini-opening" />
+        <span className="mini-rung mini-target" />
+        <span className="mini-rung mini-floor" />
+      </span>
     </span>
   );
 }
@@ -27,11 +31,13 @@ export function Welcome({
   onExample,
   onStart,
   onOpen,
+  onReader,
 }: {
   deals: StoredDeal[];
   onExample: () => void;
   onStart: () => void;
   onOpen: (d: StoredDeal) => void;
+  onReader: () => void;
 }) {
   return (
     <section className="screen welcome" aria-labelledby="welcome-title">
@@ -47,6 +53,9 @@ export function Welcome({
               {copy.welcome.start}
             </Button>
             <Button onClick={onExample}>{copy.welcome.example}</Button>
+            <Button variant="quiet" onClick={onReader}>
+              {copy.reader.welcomeButton}
+            </Button>
           </div>
         </div>
         <MiniLadder />

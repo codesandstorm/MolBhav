@@ -1,0 +1,4 @@
+{
+  "test_sha256": null,
+  "note": "Not frozen yet. npm run gold:split fills this in once, after blind label pass 1, before any training."
+}

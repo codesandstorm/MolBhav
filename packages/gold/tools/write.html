@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Gold set · writing tool</title>
+    <link rel="stylesheet" href="/tokens.css" />
+    <link rel="stylesheet" href="/tool.css" />
+    <script src="/write.js" defer></script>
+  </head>
+  <body>
+    <main>
+      <h1>Gold set · writing tool</h1>
+      <p class="note">
+        Local only: this page talks to a server on 127.0.0.1 and nothing leaves this computer.
+        Messages are saved to <code>ml/gold/data/messages.jsonl</code> with
+        <code>source: self_authored</code>.
+      </p>
+      <p id="progress" class="muted" aria-live="polite"></p>
+      <section class="panel" aria-labelledby="card-title">
+        <h2 id="card-title">Card</h2>
+        <div id="card"></div>
+        <p class="muted">
+          The labeller will see only your message and this line: <strong id="context"></strong>
+        </p>
+      </section>
+      <form id="form">
+        <div class="field">
+          <label for="text">Your message, as the client</label>
+          <textarea id="text" autocomplete="off" spellcheck="false"></textarea>
+        </div>
+        <fieldset>
+          <legend>Language you wrote in</legend>
+          <div class="options">
+            <label><input type="radio" name="language" value="en" /> English</label>
+            <label><input type="radio" name="language" value="hinglish" /> Roman Hinglish</label>
+          </div>
+        </fieldset>
+        <p id="status" class="muted" role="status"></p>
+        <p id="error" class="error" role="alert"></p>
+        <div class="actions">
+          <button type="submit" class="primary">Save and next (Ctrl+Enter)</button>
+          <button type="button" id="skip">Skip this card</button>
+          <button type="button" id="prev">Previous card</button>
+          <button type="button" id="next">Next card</button>
+          <button type="button" id="resume">First unwritten card</button>
+        </div>
+      </form>
+      <p class="note">
+        Writing time runs from when a card appears until you save, and pauses while this tab is
+        hidden. It re-measures the 1.5 min/message assumption (04 §2.1).
+      </p>
+    </main>
+  </body>
+</html>

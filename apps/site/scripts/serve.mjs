@@ -18,6 +18,7 @@ const types = {
   '.woff2': 'font/woff2',
   '.woff': 'font/woff',
   '.png': 'image/png',
+  '.webp': 'image/webp',
   '.json': 'application/json',
 };
 const compressible = new Set(['.html', '.js', '.css', '.svg', '.json']);

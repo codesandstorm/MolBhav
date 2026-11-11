@@ -24,6 +24,19 @@ Claim labels used by every service: **FACT** (sourced) · **CALCULATION** (engin
 | S11 | Compliance reference cards | "TDS on professional fees: X% (s.…, effective…, source, reviewed on…)" | none | card | retrieval of reviewed text | 3 cards, all UNVERIFIED [EVIDENCE: docs/dataset-audit/compliance/] | shown only if VERIFIED + reviewer + review date; "not advice" banner | hidden; settings lists "pending verification" | V2 · E (only once verified) | 3 + verification time [GAP] |
 | S12 | Contract clause flags | Highlight risky clauses | contract text | flags | ML/retrieval | US contract sets only (CUAD) [EVIDENCE: cards/contract_datasets.md] | "not legal advice" | n/a | research only, not planned | n/a |
 
+**Build status, B1.1 (2026-11-11).**
+- **S4a**: the toolchain is built: guidelines v0.2 (owner-approved 2026-11-11, B1.1b), schemas and validator, the seeded card generator, local writing and blind-labelling tools, the split-and-freeze script (not run), an LLM second-annotator skeleton (provider not chosen) and unit-tested metrics [EVIDENCE: docs/product/04_research_integrity.md §2 "Tooling status"].
+  - The gold set itself is not written: 0 of 300 messages [GAP].
+  - B1.1b: both tools show one neutral quote line from the card ("Freelancer's quote so far: ₹X" / "No quote sent yet"), and each label stores it; the quote-dependent rules (J5, J7) read the same fact from the deal state [EVIDENCE: ml/gold/GUIDELINES.md §0; packages/analyser/src/rules.ts].
+- **S4b**: the amount parser and the rule baseline are built in `packages/analyser`, running in a Web Worker [EVIDENCE: packages/analyser/src/amount.ts, rules.ts, serve.ts].
+  - The parser returns exact bigint rupees or marks the amount ambiguous.
+  - The "Read your client's reply" screen is in the app, reached from Welcome and from the ladder [EVIDENCE: apps/app/src/screens/Reader.tsx].
+  - The screen has the manual picker, the low-confidence and no-amount states, and every output is an ESTIMATE with its confidence and "read by rules on your device; may be wrong".
+  - The extended privacy test passes: the pasted text appears in no request, and a Worker is created [EVIDENCE: apps/app/e2e/privacy.spec.ts].
+  - **Not scored**: there is no gold test set yet, so the screen shows no accuracy figure.
+  - The confidence threshold (0.5) and the rule weights are first guesses [HYPOTHESIS], to be tuned on dev only.
+- Hours were not timed, so the effort column is unchanged.
+
 **V1 total ≈ 109 h of services** across Phases A–D (A 22 · B1 34 · B2 16 · C 24 · D 13; 2026-11-11: B2 now = on-device learned model + hing-bert research comparison), plus UI/demo polish per phase (see 03) [HYPOTHESIS].
 
 ## Where does message analysis run? (D10, APPROVED 2026-11-10: option (a) by default, (b) opt-in only if B2 wins)

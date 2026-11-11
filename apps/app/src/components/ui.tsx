@@ -107,7 +107,8 @@ export function TopBar({
   );
 }
 
-export type FieldName = 'name' | 'e' | 'K' | 'M' | 'C' | 'b' | 't' | 'a' | 'Q';
+export type FieldName =
+  'name' | 'e' | 'K' | 'M' | 'C' | 'b' | 't' | 'a' | 'Q' | 'amount' | 'amountHigh';
 
 /** Label, hint and error, wired with aria-describedby; error text is announced. */
 export function Field(props: {

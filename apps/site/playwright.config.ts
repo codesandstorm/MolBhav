@@ -17,10 +17,19 @@ export default defineConfig({
     // Headless Chromium has no GPU: software WebGL so the live scene can be tested.
     launchOptions: { args: ['--enable-unsafe-swiftshader', '--use-angle=swiftshader'] },
   },
-  webServer: {
-    command: 'npm run build && npm run preview',
-    url: `http://localhost:${PORT}`,
-    reuseExistingServer: !ci,
-    timeout: 180_000,
-  },
+  webServer: [
+    {
+      command: 'npm run build && npm run preview',
+      url: `http://localhost:${PORT}`,
+      reuseExistingServer: !ci,
+      timeout: 180_000,
+    },
+    {
+      // the same build, served with the Cloudflare headers in public/_headers (e2e/csp.spec.ts)
+      command: 'node ../../scripts/pages-serve.ts --dir dist --headers public/_headers --port 4181',
+      url: 'http://127.0.0.1:4181/',
+      reuseExistingServer: false,
+      timeout: 180_000,
+    },
+  ],
 });

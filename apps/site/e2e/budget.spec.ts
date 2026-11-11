@@ -195,3 +195,79 @@ test('lab vitals, throttled mobile: before and after the first scroll', async ({
   record('CLS including the scene taking over', post.cls, budgets.cls, '');
   await ctx.close();
 });
+
+/**
+ * Poster vs the first live frame, same viewport, same scroll position (report-only for now).
+ * Both are screenshots of the stage; they are compared in the page at quarter size, over the
+ * pixels where either picture is lit (the dark background would flatter the number).
+ * Similarity = 1 − mean absolute RGB difference / 255 over those pixels.
+ */
+const similarity = (page: Page, a: Buffer, b: Buffer) =>
+  page.evaluate(
+    async ([pa, pb]) => {
+      const load = async (b64: string) => {
+        const img = new Image();
+        img.src = `data:image/png;base64,${b64}`;
+        await img.decode();
+        return img;
+      };
+      const [ia, ib] = await Promise.all([load(pa), load(pb)]);
+      const w = Math.max(1, Math.round(ia.naturalWidth / 4));
+      const h = Math.max(1, Math.round(ia.naturalHeight / 4));
+      const pixels = (img: HTMLImageElement) => {
+        const c = document.createElement('canvas');
+        c.width = w;
+        c.height = h;
+        const g = c.getContext('2d')!;
+        g.drawImage(img, 0, 0, w, h);
+        return g.getImageData(0, 0, w, h).data;
+      };
+      const da = pixels(ia);
+      const db = pixels(ib);
+      const lum = (d: Uint8ClampedArray, i: number) =>
+        0.2126 * d[i]! + 0.7152 * d[i + 1]! + 0.0722 * d[i + 2]!;
+      let sum = 0;
+      let n = 0;
+      for (let i = 0; i < da.length; i += 4) {
+        if (Math.max(lum(da, i), lum(db, i)) < 40) continue; // background: not compared
+        sum +=
+          Math.abs(da[i]! - db[i]!) +
+          Math.abs(da[i + 1]! - db[i + 1]!) +
+          Math.abs(da[i + 2]! - db[i + 2]!);
+        n += 3;
+      }
+      return n ? 1 - sum / n / 255 : 1;
+    },
+    [a.toString('base64'), b.toString('base64')] as const,
+  );
+
+for (const viewport of [
+  { width: 1280, height: 800 },
+  // tall enough that the stage is on screen at scroll 0: scrolling would itself start the scene
+  { width: 360, height: 1400 },
+]) {
+  test(`poster vs first live frame at ${viewport.width} px (report-only)`, async ({ browser }) => {
+    const ctx = await browser.newContext({ viewport });
+    const page = await ctx.newPage();
+    await page.goto('/');
+    await page.waitForLoadState('networkidle');
+    // the hero island hydrates after load; a key press before that is not seen by it
+    await page.locator('astro-island:not([ssr])').first().waitFor({ state: 'attached' });
+    const stage = page.locator('[data-stage]');
+    const box = await stage.boundingBox();
+    if (!box) throw new Error('no stage');
+    const clip = { ...box, height: Math.min(box.height, viewport.height - box.y) };
+    const poster = await page.screenshot({ clip, animations: 'disabled' });
+    await page.keyboard.press('Shift'); // a first interaction that does not scroll
+    await expect(stage).toHaveAttribute('data-hero', 'live', { timeout: 20_000 });
+    await page.waitForTimeout(900); // the poster's fade-out
+    expect(await page.evaluate(() => scrollY), 'same scroll position').toBe(0);
+    const live = await page.screenshot({ clip, animations: 'disabled' });
+    note(
+      `Poster vs first live frame, ${viewport.width} px: similarity [HYPOTHESIS threshold]`,
+      await similarity(page, poster, live),
+      '',
+    );
+    await ctx.close();
+  });
+}

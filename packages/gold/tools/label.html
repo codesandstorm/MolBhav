@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Gold set · blind labelling</title>
+    <link rel="stylesheet" href="/tokens.css" />
+    <link rel="stylesheet" href="/tool.css" />
+    <script src="/label.js" defer></script>
+  </head>
+  <body>
+    <main>
+      <h1>Gold set · blind labelling, pass <span id="pass"></span></h1>
+      <p class="note">
+        Local only: nothing leaves this computer. You see the message and one line about the
+        freelancer's quote, nothing else: no card, no intended move, no language, no earlier label.
+        Use ml/gold/GUIDELINES.md (§0).
+      </p>
+      <p id="progress" class="muted" aria-live="polite"></p>
+      <p id="finished" class="panel" hidden>Nothing left to label in this pass.</p>
+      <form id="form">
+        <section class="panel" aria-labelledby="msg-title">
+          <h2 id="msg-title">Message</h2>
+          <p id="context" class="muted"></p>
+          <p id="message" class="message"></p>
+        </section>
+        <fieldset>
+          <legend>Move</legend>
+          <div class="options" id="moves"></div>
+        </fieldset>
+        <fieldset id="conditional-box" hidden>
+          <legend>Conditional? (CONCESSION only)</legend>
+          <div class="options">
+            <label
+              ><input type="radio" name="conditional" value="true" /> Yes: asks for something in
+              return</label
+            >
+            <label><input type="radio" name="conditional" value="false" /> No</label>
+          </div>
+        </fieldset>
+        <fieldset>
+          <legend>Objection</legend>
+          <div class="options" id="objections"></div>
+        </fieldset>
+        <fieldset>
+          <legend>Amount (leave rupees empty when there is none)</legend>
+          <div class="grid">
+            <div class="field">
+              <label for="rupees">Rupees (digits only)</label>
+              <input type="text" id="rupees" inputmode="numeric" autocomplete="off" />
+            </div>
+            <div class="field">
+              <label for="high">Range high end (digits)</label>
+              <input type="text" id="high" inputmode="numeric" autocomplete="off" />
+            </div>
+            <div class="field">
+              <label for="unit">Unit</label>
+              <select id="unit">
+                <option value="unspecified">unspecified</option>
+                <option value="fixed">fixed</option>
+                <option value="hour">hour</option>
+                <option value="day">day</option>
+                <option value="month">month</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="currency">Currency</label>
+              <select id="currency">
+                <option value="INR">INR</option>
+                <option value="OTHER">OTHER</option>
+              </select>
+            </div>
+          </div>
+          <label><input type="checkbox" id="ambiguous" /> Amount is ambiguous</label>
+        </fieldset>
+        <label><input type="checkbox" id="unsure" /> Unsure (I used a tie-break rule)</label>
+        <p id="error" class="error" role="alert"></p>
+        <div class="actions">
+          <button type="submit" class="primary">Save and next</button>
+        </div>
+      </form>
+    </main>
+  </body>
+</html>

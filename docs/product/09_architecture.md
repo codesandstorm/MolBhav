@@ -16,12 +16,12 @@ Fixed inputs: D8 = comfortable with React, Three.js and GSAP, wants the best pro
 | Solo effort | one framework | two small build configs (Astro is thin) | two UIs, store accounts, review cycles [UNVERIFIED: store fees/process not checked] |
 | Hosting | best on Vercel; Hobby is "personal, non-commercial use" only (https://vercel.com/docs/plans/hobby) | any static host | stores + static host |
 | Lock-in | medium | low | medium |
-**Recommendation: B.** It makes the two hard rules structural instead of a matter of discipline: the showcase renders text first and the app never ships 3D code. React/R3F/GSAP skills (D8) are all used, inside Astro islands. Cost of being wrong: if the showcase and app later need shared routing or server rendering, moving the app into Next.js is a port of one SPA, not a rewrite [HYPOTHESIS]. C is the best later step if pasting turns out to be the friction point (A9) [EVIDENCE: 04_research_integrity.md §3]; a PWA **Web Share Target** may give part of that win on Android without an app [UNVERIFIED: browser support not checked] [GAP: spike 2 h].
+**Recommendation: B.** It makes the two hard rules structural instead of a matter of discipline: the showcase renders text first and the app never ships 3D code. React and R3F skills (D8) are used inside one Astro island. GSAP was in the original plan and was removed on 2026-11-11: a small, unit-tested scroll module of our own reads scroll positions instead (`apps/site/src/lib/scroll-progress.ts`), so the showcase carries one dependency fewer and no scroll-jacking library. Cost of being wrong: if the showcase and app later need shared routing or server rendering, moving the app into Next.js is a port of one SPA, not a rewrite [HYPOTHESIS]. C is the best later step if pasting turns out to be the friction point (A9) [EVIDENCE: 04_research_integrity.md §3]; a PWA **Web Share Target** may give part of that win on Android without an app [UNVERIFIED: browser support not checked] [GAP: spike 2 h].
 
 ## 2. Repository layout (option B)
 ```
-apps/site        Astro, static; React islands: R3F + GSAP ScrollTrigger scenes, posters
-apps/app         Vite + React + TypeScript PWA; IndexedDB; no three/gsap dependency (lint rule)
+apps/site        Astro, static; one React island: R3F scene loaded after the first interaction; build-time poster; own scroll module
+apps/app         Vite + React + TypeScript PWA; IndexedDB; never imports three, @react-three/* or gsap (lint rule)
 packages/engine  pure TS: price ladder, planner, debrief, number post-check (no I/O)
 packages/analyser pure TS: amount parser + rule baseline, runs in a Web Worker
 packages/tokens  colours, type, spacing (shared by site and app)
@@ -52,11 +52,19 @@ planReplies(deal: Deal, ladder: Ladder, a: Analysis) -> Option[]   // each: id, 
 checkNumbers(text: string, allowed: Money[]) -> { ok: boolean; offending: string[] }
 debrief(deal: Deal) -> { totalConceded: Money; conditional: Money; unconditional: Money; lesson: RuleId }
 
-// packages/analyser (Web Worker message)
-analyse(text: string) -> { move: Move6; anchorOrCounter?: 'ANCHOR'|'COUNTER';
-  objection: Objection6|null; amount: { value: number; currency: 'INR'; unit: Unit }|null;
-  confidence: number; source: 'rules'|'model' }
+// packages/analyser (Web Worker message; as built in B1.1, 2026-11-11)
+analyse(text: string, state: { quoteSent: boolean | null }) -> {
+  move: Move6 | null;                 // null = no evidence → the user picks (A9)
+  confidence: number;                 // margin of the top two scores, in [0, 1]
+  anchorOrCounter: 'ANCHOR'|'COUNTER'|null;   // PRICE_POSITION only, from state
+  objection: Objection6 | null; objectionConfidence: number;
+  conditional: boolean | null;        // CONCESSION only
+  amount: { rupees: bigint | null; rupeesHigh: bigint | null; unit: Unit | null;
+            currency: 'INR'|'OTHER'|null; span; ambiguous: boolean; flags; candidates };
+  evidence: { phrase, start, end, supports, weight, rule }[];
+  source: 'rules'; version: string }
 ```
+Money in the analyser is **bigint rupees**, never a float (the engine's no-float lint covers `amount.ts`); an amount it cannot settle exactly comes back `ambiguous` instead of guessed [EVIDENCE: packages/analyser/src/amount.ts]. The analyser never returns a floor, target or opening. The main thread imports only `@molbhav/analyser/client` (types only) and `/labels`, so the rules load in the Worker alone [EVIDENCE: packages/analyser/test/worker.test.ts]. The built worker is 27,123 bytes before compression, inside the ≤ 50 KB target [EVIDENCE: apps/app/dist/assets/analyser.worker-*.js, B1.1 build].
 ```http
 POST /v1/draft            (only when the user has turned drafting on)
 Content-Type: application/json   (max 2 KB)
@@ -86,6 +94,13 @@ Opt-in counts: { ladders: 3, analyses: 2, ... } -> /v1/counts [GAP: endpoint not
 | Alternative | Netlify Free | 300 credits; bandwidth costs 20 credits/GB (≈15 GB if spent only on bandwidth: CALCULATION); reset period not stated | https://www.netlify.com/pricing/ |
 | Not suitable | GitHub Pages | not for sites "providing commercial software as a service (SaaS)" | https://docs.github.com/en/pages/getting-started-with-github-pages/github-pages-limits |
 | D10(b) model, only if needed | Hugging Face Spaces CPU Basic | 2 vCPU, 16 GB RAM, free; sleeps when unused; Gradio/Docker Spaces need a paid plan to create | https://huggingface.co/docs/hub/spaces-overview |
+**Deploy prep (B1.1b, 2026-11-11).** Two Cloudflare Pages projects from this repository (root directory = repo root, `npm run build -w apps/app` → `apps/app/dist`; `npm run build -w apps/site` → `apps/site/dist`), Node from `.nvmrc`; step-by-step in [16_deploy.md](16_deploy.md). Nothing is deployed. Response headers live in each project's `public/_headers` [EVIDENCE: apps/app/public/_headers, apps/site/public/_headers]:
+- CSP `default-src 'self'` with `connect-src`, `script-src`, `style-src`, `font-src`, `worker-src` all `'self'`, `img-src 'self' data:`, `object-src 'none'`, `frame-ancestors 'none'`, `base-uri 'self'`, `form-action 'self'`; **no `'unsafe-inline'`, no `'unsafe-eval'`**. The site adds three sha256 hashes for Astro's inline island loader, media-directive script and `astro-island` style; the poster's two inline `style` attributes became a class so no style attribute needs allowing.
+- `X-Content-Type-Options: nosniff`, `Referrer-Policy: no-referrer`, `Permissions-Policy: camera=(), microphone=(), geolocation=()`.
+- Hashed assets (`/assets/*`, `/_astro/*`) `immutable` for a year; HTML, `sw.js`, `registerSW.js` and the manifest `no-cache`.
+- Not-found paths: Pages' default single-page fallback (no `404.html`, no `_redirects`) [UNVERIFIED on Cloudflare].
+- Tested by serving each build with that exact file (`scripts/pages-serve.ts`, which reads `public/_headers` on every request) in `apps/app/e2e/csp.spec.ts` and `apps/site/e2e/csp.spec.ts`: the app's setup, ladder, reader Worker and delete-all, and the site's 3D scene after the first interaction, run with no CSP violation; a `fetch` to another origin is blocked. Cloudflare's own handling of `_headers` is [UNVERIFIED] until the first deploy check (16 §5).
+
 Cost today: **₹0** for hosting [CALCULATION: all chosen tiers are free]; the LLM is the only per-use cost and is unpriced [GAP: price per draft from the chosen provider's page, cited, in Phase C]. Unknowns: whether 10 ms CPU covers a proxy that mostly waits on the network [UNVERIFIED: test in Phase C]; Cloudflare's commercial-use terms were not read [UNVERIFIED].
 
 ## 7. Evaluation plan (links the ML and the app)
@@ -113,6 +128,6 @@ Cost today: **₹0** for hosting [CALCULATION: all chosen tiers are free]; the L
 - **Authoring:** Blender → glTF 2.0; low-poly, matte clay/brass, baked lighting (no real-time shadows, no environment maps) [HYPOTHESIS: cheapest look that fits 08].
 - **Compression:** `gltf-transform` with Meshopt (or Draco) for geometry, KTX2/Basis for textures, textures ≤ 1024²; instancing for repeated objects (weights, beads, tiles) [UNVERIFIED: tool flags to confirm in A2].
 - **Loading:** a scene mounts only when within ~1 viewport of the screen (IntersectionObserver); poster image (AVIF/WebP) is the Suspense fallback; scenes dispose geometry/textures when far away.
-- **Runtime:** one shared canvas where possible; R3F `frameloop="demand"`; device-pixel-ratio capped at 1.5; GPU tiering decides 3D vs poster; scroll drives one GSAP ScrollTrigger timeline value per scene that the scene reads (no per-frame React re-renders).
+- **Runtime:** one shared canvas where possible; R3F `frameloop="demand"`; device-pixel-ratio capped at 1.5; GPU tiering decides 3D vs poster; scroll drives one progress value per scene, read at most once per frame by our own module (`scroll-progress.ts`: `watchProgress`, `piecewise`, `follow`) and eased in the frame loop (no per-frame React re-renders, no GSAP). The poster is projected at build time from the same scene model as the live scene (`scene-model.ts`, `poster.ts`).
 - **Fallback triggers:** no WebGL, Save-Data, low GPU tier, reduced motion, or measured fps < 30 for 2 s → poster + HTML.
 - **Budget enforcement:** Lighthouse CI fails the build when over budget; asset sizes checked by a script against the per-scene 1.5 MB cap.

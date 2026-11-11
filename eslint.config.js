@@ -45,8 +45,16 @@ export default tseslint.config(
     languageOptions: { globals: { ...globals.node } },
   },
   {
-    files: ['packages/engine/src/**/*.ts'],
+    files: [
+      'packages/engine/src/**/*.ts',
+      'packages/analyser/src/amount.ts',
+      'packages/analyser/src/format.ts',
+    ],
     rules: noFloatMoney,
+  },
+  {
+    files: ['packages/gold/tools/**/*.js'],
+    languageOptions: { globals: { ...globals.browser } },
   },
   {
     files: ['apps/site/**/*.{ts,tsx}'],

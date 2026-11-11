@@ -8,6 +8,9 @@ const SCENE_CHUNK = /LadderScene/;
 const sceneRequests = (urls: string[]) => urls.filter((u) => SCENE_CHUNK.test(u));
 const value = (id: string) => ladder.rungs.find((r) => r.id === id)?.value ?? '';
 const stage = (page: Page) => page.locator('[data-stage]');
+/** The hero island hydrates after load; an interaction before that is not seen by it. */
+const hydrated = (page: Page) =>
+  page.locator('astro-island:not([ssr])').first().waitFor({ state: 'attached' });
 
 test.describe('showcase: text first and true copy', () => {
   test('headline, promise, both calls to action and every number work with JavaScript off', async ({
@@ -201,7 +204,7 @@ test.describe('showcase: keyboard, touch and accessibility', () => {
   }) => {
     await page.goto('/');
     const order: string[] = [];
-    for (let i = 0; i < 11; i++) {
+    for (let i = 0; i < 12; i++) {
       await page.keyboard.press('Tab');
       const info = await page.evaluate(() => {
         const el = document.activeElement as HTMLElement;
@@ -227,13 +230,14 @@ test.describe('showcase: keyboard, touch and accessibility', () => {
       'Try it',
       'Try the price ladder',
       'See how it works',
-      'Try the price ladder',
+      'Try the price ladder', // the real app section
+      'Try the price ladder', // how it works
       'How it works',
       'Privacy',
       'Try it',
     ]);
     await page.keyboard.press('Shift+Tab');
-    for (let i = 0; i < 9; i++) await page.keyboard.press('Shift+Tab');
+    for (let i = 0; i < 10; i++) await page.keyboard.press('Shift+Tab');
     await page.keyboard.press('Enter'); // the skip link
     expect(await page.evaluate(() => document.activeElement?.id)).toBe('main');
   });
@@ -277,6 +281,16 @@ test.describe('showcase: keyboard, touch and accessibility', () => {
       const page = await ctx.newPage();
       await page.goto('/');
       const check = async () => {
+        // Sections fade in when scrolled to; axe scrolls while it measures, which can catch a
+        // section mid-fade. Check every section as a visitor sees it once it is on screen.
+        await page.evaluate(() =>
+          document.querySelectorAll('[data-reveal]').forEach((e) => e.classList.add('is-in')),
+        );
+        await page.waitForFunction(() =>
+          [...document.querySelectorAll('[data-reveal]')].every(
+            (e) => getComputedStyle(e).opacity === '1',
+          ),
+        );
         const r = await new AxeBuilder({ page }).analyze();
         return r.violations
           .filter((v) => v.impact === 'serious' || v.impact === 'critical')
@@ -311,6 +325,96 @@ test.describe('privacy', () => {
       .filter((r) => new URL(r.url).origin !== origin || r.method !== 'GET');
     expect(foreign).toEqual([]);
     expect(rec.requests.some((r) => SCENE_CHUNK.test(r.url()))).toBe(true);
+    await ctx.close();
+  });
+});
+
+test.describe('showcase: atmosphere, product shot, reveals', () => {
+  /** Counts WebGL draw calls, so a test can tell whether the scene is still rendering. */
+  const countDraws = (page: Page) =>
+    page.addInitScript(() => {
+      const w = window as unknown as { __draws: number };
+      w.__draws = 0;
+      for (const proto of [WebGLRenderingContext.prototype, WebGL2RenderingContext.prototype])
+        for (const name of ['drawArrays', 'drawElements'] as const) {
+          const original = proto[name] as (...a: unknown[]) => void;
+          (proto as unknown as Record<string, unknown>)[name] = function (
+            this: unknown,
+            ...a: unknown[]
+          ) {
+            w.__draws++;
+            return original.apply(this, a);
+          };
+        }
+    });
+  const draws = (page: Page) =>
+    page.evaluate(() => (window as unknown as { __draws: number }).__draws);
+
+  test('dust motes keep the scene drawing on screen, and drawing stops off screen', async ({
+    page,
+  }) => {
+    await countDraws(page);
+    await page.goto('/');
+    await hydrated(page);
+    await page.keyboard.press('Shift');
+    await expect(stage(page)).toHaveAttribute('data-hero', 'live', { timeout: 20_000 });
+    const a = await draws(page);
+    await page.waitForTimeout(1000);
+    expect(await draws(page), 'ambient frames while the stage is visible').toBeGreaterThan(a);
+    await page.evaluate(() => scrollTo(0, document.documentElement.scrollHeight));
+    await page.waitForTimeout(1500); // the scroll ease settles
+    const b = await draws(page);
+    await page.waitForTimeout(1000);
+    expect(await draws(page), 'no frames once the stage is off screen').toBe(b);
+  });
+
+  test('the real app shot: same-origin, lazy, sized, captioned as made-up example data', async ({
+    page,
+  }) => {
+    await page.goto('/');
+    const img = page.locator('.device img');
+    await expect(img).toHaveAttribute('loading', 'lazy');
+    await expect(img).toHaveAttribute('src', /^\/product\/.+\.webp$/);
+    expect(Number(await img.getAttribute('width'))).toBeGreaterThan(0);
+    expect(Number(await img.getAttribute('height'))).toBeGreaterThan(0);
+    await expect(page.locator('.device-wrap figcaption')).toHaveText(
+      'The real app (example data, made up)',
+    );
+    const res = await page.request.get('/product/app-ladder.webp');
+    expect(res.headers()['content-type']).toContain('image/webp');
+    expect((await res.body()).length, 'product shot under 80 KB').toBeLessThan(80 * 1024);
+  });
+
+  test('one icon set: four inline SVGs on a 24 px grid with one stroke weight', async ({
+    page,
+  }) => {
+    await page.goto('/');
+    const icons = await page.locator('.pillar svg.icon').evaluateAll((els) =>
+      els.map((e) => ({
+        box: e.getAttribute('viewBox'),
+        stroke: e.getAttribute('stroke-width'),
+        hidden: e.getAttribute('aria-hidden'),
+      })),
+    );
+    expect(icons).toHaveLength(4);
+    for (const i of icons) expect(i).toEqual({ box: '0 0 24 24', stroke: '1.6', hidden: 'true' });
+  });
+
+  test('reveals: hidden only until scrolled to, and never under reduced motion', async ({
+    browser,
+  }) => {
+    const moving = await browser.newPage();
+    await moving.goto('/');
+    await expect(moving.locator('.why')).toHaveCSS('opacity', '0');
+    await moving.locator('.why').scrollIntoViewIfNeeded();
+    await expect(moving.locator('.why')).toHaveCSS('opacity', '1');
+    await moving.close();
+
+    const ctx = await browser.newContext({ reducedMotion: 'reduce' });
+    const still = await ctx.newPage();
+    await still.goto('/');
+    for (const sel of ['.product', '.why', '.how', '.trust', '.foot'])
+      await expect(still.locator(sel)).toHaveCSS('opacity', '1');
     await ctx.close();
   });
 });

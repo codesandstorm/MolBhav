@@ -1,0 +1,22 @@
+{"id":"f01","source":"fixture","text":"Can you do it for 28k? That's what we planned.","expect":{"move":"PRICE_POSITION"}}
+{"id":"f02","source":"fixture","text":"Final rate kya hoga aapka is project ka?","expect":{"move":"PRICE_POSITION"}}
+{"id":"f03","source":"fixture","text":"That's way more than we expected for a simple site.","expect":{"move":"PUSHBACK","objection":"SCOPE"}}
+{"id":"f04","source":"fixture","text":"Bhai itna zyada? Thoda kam karo.","expect":{"move":"PUSHBACK","objection":"BUDGET"}}
+{"id":"f05","source":"fixture","text":"Okay, I can stretch to 38k if the site is live by the 20th.","expect":{"move":"CONCESSION","conditional":true}}
+{"id":"f06","source":"fixture","text":"Theek hai, advance 50% de dete hain.","expect":{"move":"CONCESSION","objection":"PAYMENT_TERMS","conditional":false}}
+{"id":"f07","source":"fixture","text":"How many revisions are included, and do you handle hosting?","expect":{"move":"INFO_REQUEST"}}
+{"id":"f08","source":"fixture","text":"Kitne din lagenge poora karne mein?","expect":{"move":"INFO_REQUEST","objection":"TIMELINE"}}
+{"id":"f09","source":"fixture","text":"Sounds good, let's go ahead. Send me the invoice.","expect":{"move":"ACCEPT","objection":null}}
+{"id":"f10","source":"fixture","text":"Done hai, kal se start karo.","expect":{"move":"ACCEPT"}}
+{"id":"f11","source":"fixture","text":"Thanks for the quote, will discuss with my partner and revert.","expect":{"move":"OTHER"}}
+{"id":"f12","source":"fixture","text":"Hi, kal baat karte hain, abhi meeting mein hoon.","expect":{"move":"OTHER"}}
+{"id":"f13","source":"fixture","text":"ok","expect":{"move":"ACCEPT"}}
+{"id":"f14","source":"fixture","text":"Someone on Fiverr quoted half of this.","expect":{"move":"PUSHBACK","objection":"COMPETITOR"}}
+{"id":"f15","source":"fixture","text":"Agar 15 tak de do toh 40 kar denge.","expect":{"move":"CONCESSION","conditional":true}}
+{"id":"f16","source":"fixture","text":"Ok but pay after delivery","expect":{"move":"ACCEPT","objection":"PAYMENT_TERMS"}}
+{"id":"f17","source":"fixture","text":"Pehle kuch sample dikhao.","expect":{"objection":"TRUST"}}
+{"id":"f18","source":"fixture","text":"Not agreed.","expect":{"move":null}}
+{"id":"f19","source":"fixture","text":"Our budget is small this quarter.","expect":{"objection":"BUDGET"}}
+{"id":"f20","source":"fixture","text":"We need this live before Diwali.","expect":{"objection":"TIMELINE"}}
+{"id":"f21","source":"fixture","text":"We only pay after delivery.","expect":{"objection":"PAYMENT_TERMS"}}
+{"id":"f22","source":"fixture","text":"You quoted 45k, we can do 32k.","expect":{"move":"PRICE_POSITION"}}
