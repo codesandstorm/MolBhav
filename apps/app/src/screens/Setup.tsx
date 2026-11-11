@@ -3,7 +3,7 @@ import { copy } from '../copy.ts';
 import type { DealForm } from '../form.ts';
 import { Button, Field as TextField, Glass, type FieldName as Field } from '../components/ui.tsx';
 
-function Choice<T extends string>(props: {
+export function Choice<T extends string>(props: {
   name: string;
   legend: string;
   value: T;

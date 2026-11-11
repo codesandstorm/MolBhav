@@ -20,7 +20,9 @@ const tabTo = async (page: Page, name: string) => {
       const viaFor = id
         ? document.querySelector(`label[for="${CSS.escape(id)}"]`)?.textContent
         : null;
-      return (viaFor ?? el.textContent ?? '').trim();
+      // a radio sits inside its label
+      const wrapping = el.closest('label')?.textContent;
+      return (viaFor ?? wrapping ?? el.textContent ?? '').trim();
     });
     if (label === name) return;
   }
@@ -57,6 +59,23 @@ test('keyboard only: welcome → setup → ladder, with visible focus', async ({
   await expect(ladder.getByText('₹38,000', { exact: true })).toBeVisible();
 });
 
+test('keyboard only: the reader (S4b), from paste to a manual pick', async ({ page }) => {
+  await page.goto('/');
+  await tabTo(page, 'Read a client’s reply');
+  await page.keyboard.press('Enter');
+  await expect(page.getByRole('heading', { name: 'Read your client’s reply' })).toBeFocused();
+  await tabTo(page, 'Paste what your client said');
+  await page.keyboard.type('Can you do it for 28k?'); // made-up, not gold
+  await tabTo(page, 'Read it');
+  await page.keyboard.press('Enter');
+  const result = page.getByRole('heading', { name: 'What the rules read' });
+  await expect(result).toBeFocused();
+  // the manual picker is reachable and usable from the keyboard
+  await tabTo(page, 'Names a price or asks for one');
+  await page.keyboard.press('ArrowDown');
+  await expect(page.locator('[data-reader="move"] [data-label="USER DECISION"]')).toBeVisible();
+});
+
 test('axe: no serious or critical violations on every Phase A screen', async ({ page }) => {
   await page.goto('/');
   expect(await serious(page)).toEqual([]);
@@ -77,4 +96,22 @@ test('axe: no serious or critical violations on every Phase A screen', async ({ 
   await page.getByRole('button', { name: 'Settings and privacy' }).click();
   await page.getByRole('button', { name: 'Delete everything on this device' }).click();
   expect(await serious(page)).toEqual([]);
+});
+
+test('axe: the reader (S4b) in each of its states', async ({ page }) => {
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Read a client’s reply' }).click();
+  expect(await serious(page)).toEqual([]);
+  await page.getByRole('button', { name: 'Read it' }).click(); // empty-box error
+  await expect(page.getByRole('alert')).toBeVisible();
+  expect(await serious(page)).toEqual([]);
+  // made-up messages, not gold: a confident read with a range, low confidence, no amount
+  for (const text of ['Budget 40-45k hai, too high', 'Fine, we will pay 40k.', 'asdf qwer']) {
+    await page.getByLabel('Paste what your client said').fill(text);
+    await page.getByRole('button', { name: 'Read it' }).click();
+    await expect(page.getByRole('heading', { name: 'What the rules read' })).toBeVisible();
+    const why = page.getByText('Why: the words it matched');
+    if ((await why.count()) > 0) await why.click(); // no evidence → no list
+    expect(await serious(page)).toEqual([]);
+  }
 });

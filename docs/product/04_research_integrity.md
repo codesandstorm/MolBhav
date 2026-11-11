@@ -30,6 +30,21 @@ Draft v0.2. Tags: [EVIDENCE: path] · [HYPOTHESIS] · [GAP]. External facts need
 | 8 Adjudication | the author resolves disagreements; every change is logged with a reason; the final label = adjudicated label | adjudication log |
 | 9 Card-vs-label check | rate of label ≠ intended move | a measure of how ambiguous the writing is |
 
+**Tooling status (B1.1, 2026-11-11).** The tools for every step above exist; no gold message has been written, labelled, split or scored [GAP: writing not started]. Code in `packages/gold`, data in `ml/gold/` [EVIDENCE: packages/gold/, ml/gold/]:
+
+| Step | Tool | Status |
+|---|---|---|
+| 1 | `ml/gold/GUIDELINES.md` | **v0.1 DRAFT**: awaiting the owner's approval of judgement calls J1–J13 and of COMPETITOR as the sixth objection type [HYPOTHESIS] |
+| 2 | `npm run gold:cards` → `ml/gold/cards/cards.jsonl` (300 cards, seed 42) + `COVERAGE.md` | built; a test checks it is deterministic and that every learned class gets ≥ 10 expected test items |
+| 3 | `npm run gold:write` (local page on 127.0.0.1:4410) → `ml/gold/data/messages.jsonl` | built, not used yet; records writing seconds per message |
+| 4, 6 | `npm run gold:label` (127.0.0.1:4411; `-- --pass v2` for the retest, offered only ≥ 14 days after v1) | built, not used yet; shows the text only, shuffled; records labelling seconds |
+| 5 | `npm run gold:split` (stratified 60/20/20, seed 42; writes the test sha256 to `ml/gold/eval/frozen.json` and `EVAL_REPORT.md`) | built, **not run**; refuses to run twice; a test fails if `test.jsonl` no longer matches the hash |
+| 7 | `npm run gold:annotate` | skeleton only: the provider is not chosen, so it fails closed before reading anything [GAP: provider decision] |
+| 2.2 metrics | `packages/gold/src/metrics.ts` (κ per field, confusion, macro-F1, accuracy, support with "too few to score", Wilson interval, bootstrap and paired bootstrap, 2,000 resamples, seed 42) | unit-tested against hand-computed values |
+| checks | `npm run gold:validate` (schema, `source: "self_authored"` only, duplicate ids) | built; a test rejects any `fixture` row under `ml/gold/` |
+
+The S4b rule baseline and amount parser were written from the guidelines and the card formats only, before any gold message existed [EVIDENCE: packages/analyser/src/rules.ts, packages/analyser/src/amount.ts]. Their weights may later be tuned on the dev split only, never on test.
+
 ### 2.1 Bottom-up hours for S4a [HYPOTHESIS: per-item times are guesses; re-measure on the first 60 messages]
 Assumed rates: writing 1.5 min/message (Hinglish and ambiguous ones included in the average), blind labelling 0.6 min/message per pass, ~25% author–LLM disagreements at 2 min each.
 | Task | 240 msgs | 300 msgs | 400 msgs |
@@ -43,6 +58,8 @@ Assumed rates: writing 1.5 min/message (Hinglish and ambiguous ones included in 
 | Split, freeze + hash, eval harness with bootstrap | 4 | 4 | 4 |
 | **Blocking total** | **22.4** | **25.0** | **29.3** |
 | Test-retest pass 2 (background, non-blocking) | 2.4 | 3.0 | 4.0 |
+
+The rows "Guidelines", "Card generator", "Split, freeze + hash, eval harness" and the LLM script are now built (B1.1); their hours were not timed. The writing and labelling hours are **re-estimated only from the tools' own timing logs** (`npm run gold:timing` compares measured minutes per message with the 1.5 and 0.6 assumed here), never re-guessed. No timing exists yet [GAP: first 60 messages].
 
 ### 2.2 Evaluation protocol (results are directional)
 - Report **per-class support** (test count per label) next to every per-class score; any class with < 10 test items is flagged "too few to score".

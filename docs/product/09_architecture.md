@@ -52,11 +52,19 @@ planReplies(deal: Deal, ladder: Ladder, a: Analysis) -> Option[]   // each: id, 
 checkNumbers(text: string, allowed: Money[]) -> { ok: boolean; offending: string[] }
 debrief(deal: Deal) -> { totalConceded: Money; conditional: Money; unconditional: Money; lesson: RuleId }
 
-// packages/analyser (Web Worker message)
-analyse(text: string) -> { move: Move6; anchorOrCounter?: 'ANCHOR'|'COUNTER';
-  objection: Objection6|null; amount: { value: number; currency: 'INR'; unit: Unit }|null;
-  confidence: number; source: 'rules'|'model' }
+// packages/analyser (Web Worker message; as built in B1.1, 2026-11-11)
+analyse(text: string, state: { quoteSent: boolean | null }) -> {
+  move: Move6 | null;                 // null = no evidence → the user picks (A9)
+  confidence: number;                 // margin of the top two scores, in [0, 1]
+  anchorOrCounter: 'ANCHOR'|'COUNTER'|null;   // PRICE_POSITION only, from state
+  objection: Objection6 | null; objectionConfidence: number;
+  conditional: boolean | null;        // CONCESSION only
+  amount: { rupees: bigint | null; rupeesHigh: bigint | null; unit: Unit | null;
+            currency: 'INR'|'OTHER'|null; span; ambiguous: boolean; flags; candidates };
+  evidence: { phrase, start, end, supports, weight, rule }[];
+  source: 'rules'; version: string }
 ```
+Money in the analyser is **bigint rupees**, never a float (the engine's no-float lint covers `amount.ts`); an amount it cannot settle exactly comes back `ambiguous` instead of guessed [EVIDENCE: packages/analyser/src/amount.ts]. The analyser never returns a floor, target or opening. The main thread imports only `@molbhav/analyser/client` (types only) and `/labels`, so the rules load in the Worker alone [EVIDENCE: packages/analyser/test/worker.test.ts]. The built worker is 27,123 bytes before compression, inside the ≤ 50 KB target [EVIDENCE: apps/app/dist/assets/analyser.worker-*.js, B1.1 build].
 ```http
 POST /v1/draft            (only when the user has turned drafting on)
 Content-Type: application/json   (max 2 KB)

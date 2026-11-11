@@ -83,6 +83,16 @@ Target WCAG 2.2 AA [HYPOTHESIS: standard chosen, not audited]. Rules: full keybo
 | Reply | box placeholder | "Paste what your client said" |
 | Reply | privacy line | "Stays on this device. Not sent to us or to any AI service." |
 | Reply | result | "Asking for a lower price · Reason: budget · Mentions ₹30,000 (fixed)" |
+| Reply (S4b, as built in B1.1) | title · lede | "Read your client’s reply" · "Paste their message. MolBhav sorts out what they are doing, why, and any amount they mention. You can correct every part." [HYPOTHESIS: untested with users] [EVIDENCE: apps/app/src/copy.ts `reader`] |
+| Reply (S4b) | entry points | Welcome: "Read a client’s reply" · Ladder: "Got a reply from your client? Paste it." + "Read their reply" [HYPOTHESIS] |
+| Reply (S4b) | privacy line (C3) | "**Stays on this device.** MolBhav reads your client’s message on your phone or laptop. It is not sent to us or to any AI service." (07 §5; shown while the privacy test passes) [HYPOTHESIS: wording] |
+| Reply (S4b) | deal state (USER DECISION) | "Have you sent them a quote yet?" Yes · Not yet · Not sure (drives ANCHOR vs COUNTER) [HYPOTHESIS] |
+| Reply (S4b) | every output | value + `ESTIMATE` chip + "confidence N% · read by rules on your device; may be wrong" (no accuracy figure until the frozen test set is scored) [HYPOTHESIS: wording] |
+| Reply (S4b) | move names | "Names a price or asks for one" · "Pushes back on the price" · "Moves towards you" · "Asks for information" · "Agrees" · "Something else"; sub-lines "Their first number: an anchor" / "A counter to your quote"; "With a condition attached" / "With nothing asked in return" [HYPOTHESIS] |
+| Reply (S4b) | objection names | "Budget" · "Amount of work" · "Timeline" · "Payment terms" · "Trust in you" · "Another quote or freelancer" · "No reason given" [HYPOTHESIS] |
+| Reply (S4b) | low confidence · no evidence | "Not sure what they mean. Pick one:" · "Couldn’t tell what they are doing. Pick one:"; when confident: "Not right? Pick it yourself" (picker always shown, A9) [HYPOTHESIS] |
+| Reply (S4b) | amount | "Amount they mention" (ESTIMATE until edited, then USER DECISION) · none found: "Couldn’t find an amount. Type it:" · unclear: e.g. "two different prices: check which one they mean" [HYPOTHESIS] |
+| Reply (S4b) | footer | "These rules have not been scored on a test set yet." [HYPOTHESIS] |
 | Options | titles | "Hold the price, add something small" · "Trade: lower price if 50% advance" · "Walk away politely" |
 | Options | floor guard | "This is below your floor of ₹38,000. Go ahead anyway?" (USER DECISION) |
 | Draft | badges | "Template" · "AI draft · numbers checked" |

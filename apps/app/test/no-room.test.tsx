@@ -11,7 +11,13 @@ it('says "no room at this price" instead of 0% when opening = target (spec 13 v0
   const r = computeLadder({ u: 'hour', eu: 'hour', K: 100, M: 1100 });
   if (!r.ok) throw new Error(r.error);
   const { container } = render(
-    <Ladder result={r} isExample={false} onEdit={() => {}} onEvidence={() => {}} />,
+    <Ladder
+      result={r}
+      isExample={false}
+      onEdit={() => {}}
+      onEvidence={() => {}}
+      onReader={() => {}}
+    />,
   );
   const room = container.querySelector('.room');
   expect(room?.textContent).toContain(copy.ladder.noRoom);

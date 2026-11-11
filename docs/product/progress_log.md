@@ -51,3 +51,15 @@ Session total so far: ~1.8 h [CALCULATION: 01:38–01:41, 02:28–02:46, 02:58�
 | 2026-11-11 | Screenshots, docs 03/08/09/15, README; budget 5× | ~0.3 (10:26–11:00) | — | **TBT before interaction fails in 2 of 5 runs** (88–333 ms vs 200 ms); an interleaved A/B against the A2 build (HEAD) on the same machine gives the same result for both (TBT median 272 vs 235 ms), so the machine was loaded (CPU ≈ 60 % from other apps), not A2.1; budget not loosened. A second 5× run (10:58) passed every budget: TBT 40 / 73 / 136 ms |
 
 Phase A2.1 session total: ~1.0 h [CALCULATION: 04:45–04:53 and 10:04–11:00, rounded up].
+
+### Phase B1.1 · gold-set tools, parser, rule baseline, reader screen (no branch switch: see notes)
+| Date | Part | Actual (session) h | Actual (Sandarbh) h | Status / notes |
+|---|---|---|---|---|
+| 2026-11-11 | Read the docs; Step 1: `ml/gold/GUIDELINES.md` v0.1 DRAFT | ~0.15 (11:05–11:13) | — | done; COMPETITOR proposed as the sixth objection type [HYPOTHESIS]; judgement calls J1–J13 await approval. The brief names branch `phase-b1-reader`, which does not exist locally; creating it is a git write, so the work sits uncommitted on `phase-a2-polish` |
+| 2026-11-11 | Step 2: schemas + validator, card generator (seed 42, 300 cards), writing and blind-labelling tools, split-and-freeze (not run), LLM skeleton (fails closed), metrics with hand-computed tests, timing | ~0.25 (11:13–11:27) | — | done; gold package 57 tests (1 skipped until a test split is frozen); `ml/gold/data/` gitignored except its README |
+| 2026-11-11 | Step 3: amount parser (`packages/analyser/src/amount.ts`) | ~0.25 (11:27–11:41) | — | done; exact bigint rupees or ambiguous; table, adversarial, all-300-cards and fast-check property tests; engine no-float lint applied to it |
+| 2026-11-11 | Step 4: rule baseline, Worker boundary (`rules.ts`, `serve.ts`, `client.ts`) | ~0.15 (11:41–11:48) | — | done; written from the guidelines only (illustrative examples as fixtures, no gold exists); invariants incl. a random-text property; node worker_threads boundary test |
+| 2026-11-11 | Step 5: "Read your client's reply" screen (S4b) | ~0.2 (11:48–11:59) | — | done; S7 labels, reader states, privacy (message never in any request; Worker created), axe and keyboard all green; tokens unchanged |
+| 2026-11-11 | Step 6: docs 02, 04, 08, 09, README, this log; final checks | ~0.1 (11:59–12:06) | — | lint, format, typecheck clean; unit 439 passed + 1 skipped (app 20, site 43, analyser 197, engine 64, gold 57+1 skipped, tokens 58); hand-verified 14; build ok (worker 27.1 kB, 10.9 kB gzip); e2e app 7/7, site 23/23; CI not run |
+
+Phase B1.1 session total: ~1.0 h [CALCULATION: 11:05 → 12:06]. Planned for B1 (S4a 25 h blocking + S4b 9 h): 34 h [EVIDENCE: docs/product/02_service_catalogue.md]; the 25 h of S4a are mostly the owner writing and labelling, which has not started.

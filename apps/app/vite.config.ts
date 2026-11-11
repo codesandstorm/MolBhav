@@ -22,6 +22,8 @@ export default defineConfig({
       },
     }),
   ],
+  // the analyser Worker (src/analyser.worker.ts) is bundled as an ES module
+  worker: { format: 'es' },
   test: {
     environment: 'jsdom',
     include: ['test/**/*.test.{ts,tsx}'],

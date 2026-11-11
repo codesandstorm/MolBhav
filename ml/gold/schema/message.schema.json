@@ -1,0 +1,175 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "molbhav/gold/message.schema.json",
+  "title": "Gold message (self-authored only)",
+  "description": "One client message written by the author for one prompt card. Never a real client message. Mirrored by packages/gold/src/schema.ts.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "text",
+    "source",
+    "card_id",
+    "language",
+    "labels"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^m[0-9]{4}$"
+    },
+    "text": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 2000
+    },
+    "source": {
+      "const": "self_authored",
+      "description": "The only allowed value. Test fixtures use \"fixture\" and are rejected here."
+    },
+    "card_id": {
+      "type": "string",
+      "pattern": "^c[0-9]{3}$"
+    },
+    "language": {
+      "enum": [
+        "en",
+        "hinglish"
+      ]
+    },
+    "labels": {
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "move",
+            "objection",
+            "conditional",
+            "amount",
+            "unsure",
+            "adjudicated"
+          ],
+          "properties": {
+            "move": {
+              "enum": [
+                "PRICE_POSITION",
+                "PUSHBACK",
+                "CONCESSION",
+                "INFO_REQUEST",
+                "ACCEPT",
+                "OTHER"
+              ]
+            },
+            "objection": {
+              "enum": [
+                "BUDGET",
+                "SCOPE",
+                "TIMELINE",
+                "PAYMENT_TERMS",
+                "TRUST",
+                "COMPETITOR",
+                "NONE"
+              ]
+            },
+            "conditional": {
+              "type": [
+                "boolean",
+                "null"
+              ],
+              "description": "true/false for CONCESSION only; null otherwise (checked by the validator)"
+            },
+            "amount": {
+              "$ref": "#/$defs/amount"
+            },
+            "unsure": {
+              "type": "boolean"
+            },
+            "adjudicated": {
+              "type": "boolean"
+            }
+          }
+        }
+      ]
+    },
+    "meta": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "written_at",
+        "writing_seconds",
+        "tool"
+      ],
+      "properties": {
+        "written_at": {
+          "type": "string",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\.\\d+)?Z$"
+        },
+        "writing_seconds": {
+          "type": "number",
+          "minimum": 0
+        },
+        "tool": {
+          "type": "string"
+        },
+        "edited_at": {
+          "type": "string",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\.\\d+)?Z$"
+        }
+      }
+    }
+  },
+  "$defs": {
+    "amount": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "rupees",
+        "rupees_high",
+        "unit",
+        "currency",
+        "ambiguous"
+      ],
+      "properties": {
+        "rupees": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^[1-9][0-9]{0,11}$"
+        },
+        "rupees_high": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^[1-9][0-9]{0,11}$"
+        },
+        "unit": {
+          "enum": [
+            "fixed",
+            "hour",
+            "day",
+            "month",
+            "unspecified",
+            null
+          ]
+        },
+        "currency": {
+          "enum": [
+            "INR",
+            "OTHER",
+            null
+          ]
+        },
+        "ambiguous": {
+          "type": "boolean"
+        }
+      },
+      "description": "Whole rupees as digit strings (never floats). With rupees null, rupees_high, unit and currency are null; otherwise unit and currency are set and rupees_high > rupees (checked by the validator)."
+    }
+  }
+}

@@ -63,6 +63,74 @@ test('no request body or URL contains entered deal text', async ({ page, context
   }
 });
 
+/**
+ * S4b / D10a / claim C3: the pasted client message is read in a Web Worker on the device and
+ * never appears in any request (body or URL). A made-up probe message, not gold.
+ */
+const MESSAGE = 'ZQXREADER bhai 47,613 bahut zyada hai, 38k mein karo? Call 9811122233';
+const messageNeedles = [
+  MESSAGE,
+  'ZQXREADER',
+  encodeURIComponent(MESSAGE),
+  encodeURIComponent('ZQXREADER'),
+  '47,613',
+  '47613',
+  '9811122233',
+  'bahut zyada',
+];
+
+test('the pasted client message never leaves the device; it is read in a Worker', async ({
+  page,
+  context,
+  baseURL,
+}) => {
+  const seen: Request[] = [];
+  context.on('request', (r) => seen.push(r));
+  const workers: string[] = [];
+  page.on('worker', (w) => workers.push(w.url()));
+
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Read a client’s reply' }).click();
+  await expect(page.getByText('Stays on this device.')).toBeVisible();
+  await page.getByLabel('Paste what your client said').fill(MESSAGE);
+  await page.getByRole('radio', { name: 'Yes' }).check();
+  await page.getByRole('button', { name: 'Read it' }).click();
+  await expect(page.getByRole('heading', { name: 'What the rules read' })).toBeVisible();
+  await expect(page.locator('[data-reader="move"] .reader-value').first()).toContainText(
+    'read by rules on your device; may be wrong',
+  );
+  await expect(page.getByLabel('Amount they mention')).toHaveValue('38,000');
+  await page.getByText('Why: the words it matched').click();
+  await page.getByRole('radio', { name: 'Pushes back on the price' }).check();
+  await page.getByLabel('Amount they mention').fill('40000');
+
+  // delete everything clears this screen too
+  await page.getByRole('button', { name: 'Settings and privacy' }).click();
+  await page.getByRole('button', { name: 'Delete everything on this device' }).click();
+  await page.getByRole('button', { name: 'Yes, delete everything' }).click();
+  await expect(page.getByText('Everything on this device was deleted.')).toBeVisible();
+  await page.getByRole('button', { name: 'MolBhav' }).click();
+  await page.getByRole('button', { name: 'Read a client’s reply' }).click();
+  await expect(page.getByLabel('Paste what your client said')).toHaveValue('');
+  await page.waitForLoadState('networkidle');
+
+  expect(workers.length, 'the analyser ran in a Web Worker').toBeGreaterThan(0);
+  expect(seen.length).toBeGreaterThan(0); // the capture works
+  const origin = new URL(baseURL!).origin;
+  for (const r of seen) {
+    expect(r.method(), r.url()).toBe('GET');
+    expect(new URL(r.url()).origin, r.url()).toBe(origin);
+    const body = r.postData() ?? '';
+    const url = decodeURIComponent(r.url());
+    for (const n of messageNeedles) {
+      expect(body.includes(n), `body of ${r.url()} contains ${n}`).toBe(false);
+      expect(url.includes(n), `URL ${r.url()} contains ${n}`).toBe(false);
+    }
+    const headers = JSON.stringify(await r.allHeaders());
+    expect(headers.includes('ZQXREADER'), `headers of ${r.url()}`).toBe(false);
+  }
+});
+
 test('delete everything removes the stored deal', async ({ page }) => {
   await page.goto('/');
   await page.getByRole('button', { name: 'Try an example deal' }).click();

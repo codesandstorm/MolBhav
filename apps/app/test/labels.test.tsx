@@ -1,7 +1,16 @@
 import 'fake-indexeddb/auto';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { App } from '../src/App.tsx';
+
+// jsdom has no Worker: the test runs the same rules directly (the browser runs them in the Worker)
+vi.mock('../src/analyser.ts', async () => {
+  const { analyse } = await import('@molbhav/analyser');
+  return {
+    analyseMessage: async (text: string, state: { quoteSent: boolean | null }) =>
+      analyse(text, state),
+  };
+});
 
 /**
  * S7 rule: no number can render without a label.
@@ -80,6 +89,31 @@ describe('no unlabelled number can render (S7)', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Settings and privacy' }));
     await screen.findByRole('heading', { name: 'Settings and privacy' });
+    expect(unlabelledDigits(container)).toEqual([]);
+  });
+
+  it('the reader (S4b): results, low confidence, no amount, a range, an edited amount', async () => {
+    const { container } = render(<App />);
+    fireEvent.click(screen.getByRole('button', { name: 'Read a client’s reply' }));
+    await screen.findByRole('heading', { name: 'Read your client’s reply' });
+    expect(unlabelledDigits(container)).toEqual([]);
+    const box = screen.getByLabelText('Paste what your client said');
+    // made-up test messages, not gold
+    for (const text of [
+      'Too high bhai. Budget 4,50,000 hai, 2 pages only, 18% GST extra. Can you do ₹40,000-₹45,000?',
+      'asdf qwer 15',
+      'Kitne din lagenge?',
+      'Okay, I can stretch to 38k if you finish by the 20th.',
+    ]) {
+      fireEvent.change(box, { target: { value: text } });
+      fireEvent.click(screen.getByRole('button', { name: 'Read it' }));
+      await screen.findByRole('heading', { name: 'What the rules read' });
+      for (const d of container.querySelectorAll('details')) d.open = true;
+      expect(unlabelledDigits(container)).toEqual([]);
+    }
+    fireEvent.change(screen.getByLabelText('Amount they mention'), {
+      target: { value: '41,000' },
+    });
     expect(unlabelledDigits(container)).toEqual([]);
   });
 

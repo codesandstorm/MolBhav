@@ -31,11 +31,13 @@ export function Welcome({
   onExample,
   onStart,
   onOpen,
+  onReader,
 }: {
   deals: StoredDeal[];
   onExample: () => void;
   onStart: () => void;
   onOpen: (d: StoredDeal) => void;
+  onReader: () => void;
 }) {
   return (
     <section className="screen welcome" aria-labelledby="welcome-title">
@@ -51,6 +53,9 @@ export function Welcome({
               {copy.welcome.start}
             </Button>
             <Button onClick={onExample}>{copy.welcome.example}</Button>
+            <Button variant="quiet" onClick={onReader}>
+              {copy.reader.welcomeButton}
+            </Button>
           </div>
         </div>
         <MiniLadder />

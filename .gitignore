@@ -42,3 +42,6 @@ test-results/
 .budget/
 # private concept art: never committed or shipped
 docs/product/reference/
+# gold-set data: self-authored messages and labels stay local until the owner decides to commit them
+ml/gold/data/*
+!ml/gold/data/README.md

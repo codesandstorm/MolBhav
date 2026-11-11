@@ -1035,3 +1035,119 @@ details[open] > summary .disclosure-icon {
     transition: none !important;
   }
 }
+
+/* ── Reader (S4b) ───────────────────────────────────────────────────── */
+.reader-input,
+.reader-result {
+  display: grid;
+  gap: var(--mb-space-5);
+}
+.textarea-row {
+  margin-top: var(--mb-space-1);
+  border-radius: var(--mb-radius-md);
+  border: 1px solid var(--mb-color-border-strong);
+  background: var(--mb-color-surface-sunken);
+  transition: border-color var(--mb-duration-fast) var(--mb-ease-standard);
+}
+.textarea-row:hover {
+  border-color: var(--mb-color-text-muted);
+}
+.textarea-row:focus-within {
+  outline: 3px solid var(--mb-color-focus);
+  outline-offset: 2px;
+}
+.field-error .textarea-row {
+  border-color: var(--mb-color-danger);
+}
+.textarea-row textarea {
+  display: block;
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 8rem;
+  padding: var(--mb-space-3);
+  border: 0;
+  background: transparent;
+  color: var(--mb-color-text);
+  font: inherit;
+  font-size: var(--mb-text-md);
+  resize: vertical;
+}
+.textarea-row textarea:focus-visible {
+  outline: none;
+}
+.reader-privacy {
+  margin: 0;
+  padding: 0;
+  align-items: flex-start;
+}
+.reader-row {
+  display: grid;
+  gap: var(--mb-space-3);
+  padding-top: var(--mb-space-4);
+  border-top: 1px solid var(--mb-color-border);
+}
+.reader-row h4 {
+  margin: 0;
+  font-size: var(--mb-text-sm);
+  color: var(--mb-color-text-muted);
+  font-weight: var(--mb-weight-strong);
+}
+.reader-value {
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--mb-space-1) var(--mb-space-3);
+  font-size: var(--mb-text-lg);
+}
+.reader-meta {
+  flex-basis: 100%;
+  order: 3;
+  font-size: var(--mb-text-sm);
+  color: var(--mb-color-text-muted);
+}
+.reader-sub {
+  margin: 0;
+}
+.reader-select {
+  max-width: 22rem;
+}
+.input-row select {
+  flex: 1;
+  min-width: 0;
+  min-height: 44px;
+  border: 0;
+  background: transparent;
+  color: var(--mb-color-text);
+  font: inherit;
+}
+.input-row select:focus-visible {
+  outline: none;
+}
+.input-row select option {
+  background: var(--mb-color-surface-raised);
+  color: var(--mb-color-text);
+}
+.reader-picker-open .choice legend {
+  color: var(--mb-color-accent);
+}
+.reader-evidence {
+  margin: 0;
+  padding-left: var(--mb-space-5);
+  display: grid;
+  gap: var(--mb-space-2);
+}
+.reader-evidence q {
+  font-weight: var(--mb-weight-strong);
+}
+.reader-entry {
+  display: grid;
+  gap: var(--mb-space-3);
+  justify-items: start;
+}
+.reader-entry p {
+  margin: 0;
+}
+.reader-value-sub {
+  font-size: var(--mb-text-md);
+}

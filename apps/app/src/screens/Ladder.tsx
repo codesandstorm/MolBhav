@@ -66,11 +66,13 @@ export function Ladder({
   isExample,
   onEdit,
   onEvidence,
+  onReader,
 }: {
   result: LadderOk;
   isExample: boolean;
   onEdit: () => void;
   onEvidence: () => void;
+  onReader: () => void;
 }) {
   const h = useRef<HTMLHeadingElement>(null);
   useEffect(() => h.current?.focus(), []);
@@ -137,6 +139,10 @@ export function Ladder({
           <Button onClick={onEdit}>{copy.ladder.edit}</Button>
           <Button onClick={onEvidence}>{copy.ladder.evidence}</Button>
         </div>
+        <Glass className="reader-entry">
+          <p>{copy.reader.entry}</p>
+          <Button onClick={onReader}>{copy.reader.entryButton}</Button>
+        </Glass>
       </div>
     </section>
   );
