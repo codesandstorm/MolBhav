@@ -275,16 +275,77 @@ describe('contrast (WCAG AA) in every interactive state', () => {
     expect(missing).toEqual([]);
   });
 
-  it('no app entrance animation fades text: @keyframes animate transform only, never opacity', () => {
-    // A fade-in passes through frames where text is below 4.5:1 (axe caught one mid-fade on
-    // CI: the target tagline at 2.85:1 at opacity 0.49). 15 §6.
-    const css = readFileSync(join(root, 'apps', 'app', 'src', 'styles.css'), 'utf8');
-    const frames = [...css.matchAll(/@keyframes\s+([\w-]+)\s*\{([\s\S]*?)\n\}/g)];
-    expect(frames.length).toBeGreaterThan(0);
-    for (const [, name, body] of frames)
-      expect(/\bopacity\s*:/.test(body ?? ''), `@keyframes ${name} animates opacity`).toBe(false);
+  // A fade passes through frames where text is below 4.5:1: axe caught the app's target tagline
+  // at 2.85:1 mid-fade on CI, and the showcase's section reveals measured 3.98:1 frozen at the
+  // start of their fade. So motion is transform-only, in both stylesheets (15 §7). The only
+  // exceptions are image-only elements: the hero poster over the canvas, and the product shot.
+  const IMAGE_ONLY = new Set(['.poster', ".stage[data-hero='live'] .poster", '.device']);
+  for (const [name, file] of [
+    ['app', join(root, 'apps', 'app', 'src', 'styles.css')],
+    ['site', join(root, 'apps', 'site', 'src', 'styles', 'site.css')],
+  ] as const) {
+    const rules = cssRules(readFileSync(file, 'utf8'));
+    it(`no fade on anything that holds text (${name}): keyframes, transitions and reveals`, () => {
+      expect(rules.length).toBeGreaterThan(50);
+      const bad = [
+        ...rules
+          .filter((r) => r.at.some((a) => a.startsWith('@keyframes')))
+          .filter((r) => r.decls.some(([p]) => p === 'opacity'))
+          .map((r) => `${r.at.join(' ')} ${r.selector}: animates opacity`),
+        ...rules
+          .filter((r) => !IMAGE_ONLY.has(r.selector))
+          .filter((r) =>
+            r.decls.some(([p, v]) => p.startsWith('transition') && /\b(opacity|all)\b/.test(v)),
+          )
+          .map((r) => `${r.selector}: transitions opacity`),
+        ...rules
+          .filter((r) => r.selector.includes('[data-reveal]'))
+          .filter((r) => r.decls.some(([p]) => p === 'opacity'))
+          .map((r) => `${r.selector}: a reveal sets opacity`),
+      ];
+      expect(bad).toEqual([]);
+    });
+  }
+  it('the no-fade check catches a fade', () => {
+    const r = cssRules(
+      '@keyframes x { from { opacity: 0 } } .a { transition: opacity 1s } [data-reveal]:not(.is-in) { opacity: 0 }',
+    );
+    expect(r.find((x) => x.at[0] === '@keyframes x')?.decls).toEqual([['opacity', '0']]);
+    expect(r.find((x) => x.selector === '.a')?.decls[0]?.[1]).toMatch(/opacity/);
+    expect(r.find((x) => x.selector.includes('[data-reveal]'))?.decls).toEqual([['opacity', '0']]);
   });
 });
+
+/** A small brace parser, enough for our own stylesheets: every rule with its at-rule nesting. */
+const cssRules = (css: string) => {
+  const out: { selector: string; at: string[]; decls: [string, string][] }[] = [];
+  const stack: string[] = [];
+  let buf = '';
+  for (const ch of css.replace(/\/\*[\s\S]*?\*\//g, '')) {
+    if (ch === '{') {
+      stack.push(buf.trim());
+      buf = '';
+    } else if (ch === '}') {
+      const head = stack.pop() ?? '';
+      const body = buf.trim();
+      buf = '';
+      if (!head.startsWith('@') && body !== '')
+        out.push({
+          selector: head,
+          at: [...stack],
+          decls: body
+            .split(';')
+            .map((d) => d.trim())
+            .filter(Boolean)
+            .map((d) => {
+              const i = d.indexOf(':');
+              return [d.slice(0, i).trim().toLowerCase(), d.slice(i + 1).trim()];
+            }),
+        });
+    } else buf += ch;
+  }
+  return out;
+};
 
 /** Alpha-composite `fg` at `a` over an opaque `bg`, as a hex colour. */
 export const over = (fg: string, a: number, bg: string): string => {

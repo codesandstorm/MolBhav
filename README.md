@@ -42,6 +42,8 @@ npm run test:budget  # the site performance budget, 5 runs; min/median/max in ap
 
 Locally, `test:e2e` uses the installed Microsoft Edge. In CI it uses Playwright's Chromium (`npx playwright install --with-deps chromium`). [EVIDENCE: apps/app/playwright.config.ts]
 
+To run e2e the way CI does, on this machine: `npx playwright install chromium` once, check that ports 4173, 4180, 4321 and 4181 are free, then `CI=1 npm run test:e2e` (fresh builds, Playwright's Chromium, no server reuse). On 2026-11-11 this ran 5× each: app 10/10 every run, site 26/26 every run after the fixes in 15 §7 [EVIDENCE: docs/product/progress_log.md].
+
 The budget check measures the built site through a gzip static server under a throttled mobile profile (360 px, 150 ms RTT, 1.6 Mbps, 4× CPU). That is a lab proxy, not a real phone. Budgets live in `apps/site/budgets.ts` [EVIDENCE: docs/product/08_experience_and_brand.md §8.3].
 
 Review screenshots (app: welcome, setup, ladder, evidence, settings; site: hero poster, hero live, ladder story, pillars, how it works, the real app, trust band, footer, and hero before/after pairs for A2.1; 360, 768 and 1280 px) are in `docs/product/screens/`. Regenerate them with `node apps/site/scripts/screens.ts` while both previews run (add `--only app-reader` for just the reader screen; it needs only the app preview). The showcase's product shot (`apps/site/public/product/app-ladder.webp`) is a screenshot of the real app with its made-up example deal; it is not made by the build.

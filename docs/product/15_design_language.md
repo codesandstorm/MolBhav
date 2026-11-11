@@ -105,7 +105,7 @@ Glass, glow and gradient tokens: `--mb-glass-fill` (tint `#1E1918` at 0.86), `--
 | **Kicker** (`.kicker`) | small uppercase accent label above each section heading | — |
 | **Section heading** | Fraunces, from `text-3xl` up to `text-display`, italic emphasis in `accent` | — |
 | **Device frame** (`.device`) | glass frame around the real app's ladder screen (`public/product/app-ladder.webp`, lazy, 41 KB), caption "The real app (example data, made up)" | rises and settles as it scrolls in (`--rise`, our scroll module); static under reduced motion or without JavaScript |
-| **Reveal** (`[data-reveal]`) | sections fade and rise 1.5 rem once, when scrolled to | shown at once on keyboard focus; never hidden without JavaScript or under reduced motion |
+| **Reveal** (`[data-reveal]`) | sections rise 1.5 rem once, when scrolled to; they never fade (§7) | shown at once on keyboard focus; never offset without JavaScript or under reduced motion |
 | **Footer** | gradient band, glass rim line, wordmark, the promise line, nav, small print | — |
 
 The product shot is made by `apps/site/scripts/product-shot.ts` from the running app's own example deal. It is not part of the build; rerun it when the ladder screen changes.
@@ -142,12 +142,18 @@ The screens use only these: welcome, setup (two glass groups, "Add more detail" 
 | `--mb-duration-scene` | 1200 ms | reserved for the showcase |
 | `--mb-ease-standard` / `settle` / `exit` | `cubic-bezier(0.2,0,0,1)` / `(0.16,1,0.3,1)` / `(0.4,0,1,1)` | UI / arriving / leaving |
 - Only `opacity` and `transform` animate, so nothing shifts layout [EVIDENCE: apps/*/src/**/*.css; CLS 0.001 in the budget run].
-- **App entrance animations move, they do not fade.** The rung rise and the toast animate `transform` only. A fade puts text below 4.5:1 for part of its duration: on CI, axe sampled the Target rung mid-fade and measured its tagline at 2.85:1 and its chip at 3.74:1 (opacity ≈ 0.5). A test fails if any app `@keyframes` animates `opacity` [EVIDENCE: tokens.test.ts "no app entrance animation fades text"]. The showcase's section reveals still fade [GAP: the site was outside this fix and was not measured mid-reveal].
+- **Nothing that holds text fades; it moves.** The app's rung rise and toast, and the showcase's section reveals, animate `transform` only. A fade puts text below 4.5:1 for part of its duration: on CI, axe sampled the app's Target rung mid-fade and measured its tagline at 2.85:1 and its chip at 3.74:1 (opacity ≈ 0.5). The showcase reveals had the same race: with each reveal's transition frozen at 0 ms (opacity 0.49 at 360 px, 0.63 at 1280 px), axe found 19 and 12 color-contrast failures (e.g. a kicker at 3.98:1, a lede at 4.14:1); after the fix, 20 frozen frames (0–600 ms, 360 and 1280 px) have 0 failures and opacity 1 throughout [EVIDENCE: a scratch frozen-frame script, 2026-11-11, Playwright's Chromium]. A test fails if either stylesheet animates or transitions `opacity` on anything that holds text, or if a reveal sets `opacity` [EVIDENCE: tokens.test.ts "no fade on anything that holds text (app)", "(site)"; apps/site/e2e/hero.spec.ts "reveals"]. The only exceptions are image-only: the hero poster's cross-fade over the canvas, and the product shot's rise (`.device` holds only the image; its caption sits outside it).
 - `prefers-reduced-motion: reduce` sets every duration to 0 ms, and both stylesheets disable animation and transition. In the showcase the 3D island is never hydrated, so no animation code is downloaded [EVIDENCE: apps/site/e2e/hero.spec.ts "reduced motion"].
 - 3D loads only after the first scroll, wheel, touch, pointer press or key press. Pointer movement does not count, because browsers may synthesise it [EVIDENCE: apps/site/src/lib/first-interaction.ts and its tests].
 - No autoplay, no scroll-jacking, no pinning, no smooth-scroll override, no preloader, no audio. Ambient motes and parallax are the only motion not driven by scroll; both stop off screen and never run under reduced motion.
-- Section reveals and the product shot's rise use `--mb-duration-slow` and `--mb-ease-settle`, and animate only opacity and transform.
+- Section reveals and the product shot's rise use `--mb-duration-slow` and `--mb-ease-settle`. Reveals animate `transform` only; the product shot (an image) also brightens with its rise.
 - Below 30 fps for 2 s while animating, or on a lost WebGL context, the scene hands back to the poster [EVIDENCE: apps/site/src/lib/fps-guard.ts; hero.spec.ts].
+
+**Checked on CI's browser, locally (2026-11-11).** The e2e suites now run on this machine in Playwright's own Chromium with `CI=1` (fresh builds, no server reuse), the browser CI uses, instead of only the installed Edge.
+- App: 5 runs × 10 tests, 50/50 passed.
+- Site, before the reveal fix: 5 × 26/26 passed, so the reveal race did not show up in a whole run. Frozen frames reproduced it (the numbers above), and the fix went in anyway.
+- Site, after the reveal fix: 4 runs passed 26/26; 1 run failed 1 test, "reduced motion: … scroll stays native", with scrollY 0. Cause, reproduced: the test wheeled 3,000 px and then pressed Tab. Tab focuses the skip link at the top, and focusing it scrolls it into view (3000 → 0 whenever the wheel's scroll landed first). The test now presses Tab first and waits for the scroll; its assertions are unchanged. After that: 5 × 26/26 passed.
+- Ports 4173, 4180, 4321 and 4181 were free before and after every run. Linux itself (CI's OS) was not run: no Docker or WSL here [GAP].
 
 ## 8. Spacing, radius, elevation, layers
 Spacing: 0, 0.25, 0.5, 0.75, 1, 1.5, 2, 3, 4, 6 rem. Radius: sm 0.5 · md 0.875 · lg 1.5 rem · pill. Elevation: `1` and `2` are deep soft shadows with a faint inset top highlight (dark only). z-layers: base 0 · raised 10 · sticky 100 · overlay 1000 · toast 1100. Touch targets ≥ 44 px (primary buttons and inputs 48 px) [EVIDENCE: 08 §6; hero.spec.ts "360 px"].

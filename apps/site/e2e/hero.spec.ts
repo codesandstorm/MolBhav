@@ -185,8 +185,11 @@ test.describe('showcase: poster first, 3D only after the first interaction', () 
     const rec = recordTransfers(ctx);
     const page = await ctx.newPage();
     await page.goto('/');
-    await page.mouse.wheel(0, 3000);
+    // Tab before the wheel: Tab focuses the skip link at the top, and focusing scrolls it into
+    // view, so a Tab after the wheel raced the wheel's scroll (scrollY 0 in 1 of 5 CI-mode runs)
     await page.keyboard.press('Tab');
+    await page.mouse.wheel(0, 3000);
+    await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThan(1000);
     await page.waitForTimeout(2500);
     expect(await page.evaluate(() => window.scrollY)).toBeGreaterThan(1000);
     await expect(stage(page)).toHaveAttribute('data-hero', 'poster');
@@ -400,21 +403,26 @@ test.describe('showcase: atmosphere, product shot, reveals', () => {
     for (const i of icons) expect(i).toEqual({ box: '0 0 24 24', stroke: '1.6', hidden: 'true' });
   });
 
-  test('reveals: hidden only until scrolled to, and never under reduced motion', async ({
+  test('reveals: a rise only until scrolled to, never a fade, and none under reduced motion', async ({
     browser,
   }) => {
     const moving = await browser.newPage();
     await moving.goto('/');
-    await expect(moving.locator('.why')).toHaveCSS('opacity', '0');
+    // offset before it is scrolled to, but never faded: text keeps full contrast in every frame
+    await expect(moving.locator('.why')).not.toHaveCSS('transform', 'none');
+    await expect(moving.locator('.why')).toHaveCSS('opacity', '1');
     await moving.locator('.why').scrollIntoViewIfNeeded();
+    await expect(moving.locator('.why')).toHaveCSS('transform', 'none');
     await expect(moving.locator('.why')).toHaveCSS('opacity', '1');
     await moving.close();
 
     const ctx = await browser.newContext({ reducedMotion: 'reduce' });
     const still = await ctx.newPage();
     await still.goto('/');
-    for (const sel of ['.product', '.why', '.how', '.trust', '.foot'])
+    for (const sel of ['.product', '.why', '.how', '.trust', '.foot']) {
       await expect(still.locator(sel)).toHaveCSS('opacity', '1');
+      await expect(still.locator(sel)).toHaveCSS('transform', 'none');
+    }
     await ctx.close();
   });
 });

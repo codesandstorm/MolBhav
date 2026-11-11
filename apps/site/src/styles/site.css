@@ -518,15 +518,14 @@ h1 em {
   font-weight: var(--mb-weight-regular);
 }
 
-/* reveal on scroll (lib/reveal.ts): only hidden when that script runs with motion allowed */
+/* reveal on scroll (lib/reveal.ts): a rise only, never a fade, so text is at full contrast in
+   every frame (a half-faded frame failed axe color-contrast; 15 §7). Only offset when that
+   script runs with motion allowed. */
 [data-motion='on'] [data-reveal]:not(.is-in) {
-  opacity: 0;
   transform: translateY(1.5rem);
 }
 [data-reveal] {
-  transition:
-    opacity var(--mb-duration-slow) var(--mb-ease-settle),
-    transform var(--mb-duration-slow) var(--mb-ease-settle);
+  transition: transform var(--mb-duration-slow) var(--mb-ease-settle);
 }
 
 /* ── The real app, in a glass frame ─────────────────────────────────── */
