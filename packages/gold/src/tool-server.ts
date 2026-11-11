@@ -10,14 +10,16 @@
  *   anything elsewhere; no external fonts, scripts or analytics;
  * - nothing is cached by the browser (no-store).
  * Writing: one card at a time, resume, edit (until labelled), skip, progress, writing time.
- * Labelling: shuffled, blind (message text only: no card, no intended move, no language),
- * class, objection, amount fields, labelling time. Pass v2 (test-retest) only offers messages
+ * Labelling: shuffled, blind: the message text and one neutral context line from the card's
+ * quote ("Freelancer's quote so far: ₹X" or "No quote sent yet", GUIDELINES §0), and nothing
+ * else (no card, no intended move, no objection, no language, no amount format); class,
+ * objection, amount fields, labelling time. The context shown is stored with each label. Pass v2 (test-retest) only offers messages
  * whose v1 label is at least 14 days old, and never shows the v1 label.
  */
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from 'node:http';
 import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { describeCard, type Card } from './cards.ts';
+import { contextLine, describeCard, labelContext, type Card } from './cards.ts';
 import { rng, shuffle } from './rng.ts';
 import {
   parseJsonl,
@@ -28,7 +30,7 @@ import {
   type MessageRow,
 } from './schema.ts';
 
-export const TOOL_VERSION = 'gold-tools 0.1';
+export const TOOL_VERSION = 'gold-tools 0.2';
 export const RETEST_DAYS = 14;
 export const LABEL_SEED = 42;
 
@@ -73,6 +75,7 @@ export const createToolServer = (o: ToolOptions): Server => {
   const skippedPath = join(o.dataDir, 'skipped.json');
   const labelsPath = (v: 'v1' | 'v2') => join(o.dataDir, `labels_${v}.jsonl`);
   const cardIds = new Set(o.cards.map((c) => c.card_id));
+  const cardById = new Map(o.cards.map((c) => [c.card_id, c]));
 
   const skipped = (): string[] =>
     existsSync(skippedPath) ? (JSON.parse(readFileSync(skippedPath, 'utf8')) as string[]) : [];
@@ -90,6 +93,7 @@ export const createToolServer = (o: ToolOptions): Server => {
       cards: o.cards.map((c) => ({
         card_id: c.card_id,
         lines: describeCard(c),
+        context: contextLine(labelContext(c)),
         language: c.language,
       })),
       messages: messages.map((m) => ({
@@ -105,7 +109,7 @@ export const createToolServer = (o: ToolOptions): Server => {
     };
   };
 
-  /** Blind queue: id and text only, shuffled with a fixed seed per pass. */
+  /** Blind queue: id, text and the one context line only, shuffled with a fixed seed per pass. */
   const labelState = () => {
     const messages = readRows<MessageRow>(messagesPath);
     const done = new Set(readRows<LabelRow>(labelsPath(pass)).map((l) => l.message_id));
@@ -127,11 +131,17 @@ export const createToolServer = (o: ToolOptions): Server => {
       eligible.map((m) => m.id),
       rng(LABEL_SEED + (pass === 'v2' ? 1 : 0)),
     );
-    const byId = new Map(eligible.map((m) => [m.id, m.text]));
+    const byId = new Map(eligible.map((m) => [m.id, m]));
+    const contextOf = (id: string) => {
+      const card = cardById.get(byId.get(id)!.card_id);
+      return card ? labelContext(card) : null;
+    };
     return {
       mode: 'label',
       pass,
-      queue: order.filter((id) => !done.has(id)).map((id) => ({ id, text: byId.get(id)! })),
+      queue: order
+        .filter((id) => !done.has(id) && contextOf(id) !== null)
+        .map((id) => ({ id, text: byId.get(id)!.text, context: contextLine(contextOf(id)!) })),
       done: done.size,
       total: eligible.length,
       waiting_for_retest_gap: waiting,
@@ -206,9 +216,14 @@ export const createToolServer = (o: ToolOptions): Server => {
     const id = String(b.message_id ?? '');
     if (!ids.has(id) && !already.some((l) => l.message_id === id))
       return [400, { error: 'not in this pass' }] as const;
+    const message = readRows<MessageRow>(messagesPath).find((m) => m.id === id);
+    const card = message ? cardById.get(message.card_id) : undefined;
+    if (!card) return [400, { error: 'message has no known card' }] as const;
     const row: LabelRow = {
       message_id: id,
       version: pass,
+      // what the labeller was shown, taken from the card here, never from the request
+      context: labelContext(card),
       move: b.move as LabelRow['move'],
       objection: b.objection as LabelRow['objection'],
       conditional: (b.conditional ?? null) as boolean | null,

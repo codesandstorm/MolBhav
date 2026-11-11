@@ -1,6 +1,6 @@
 /**
  * Message analyser (S4b): the amount parser and the rule baseline, written from
- * ml/gold/GUIDELINES.md v0.1 before any gold message exists. Runs on the device, in a Web
+ * ml/gold/GUIDELINES.md v0.2 before any gold message exists. Runs on the device, in a Web
  * Worker (serve.ts on the worker side, client.ts on the main thread). The learned model (S4c)
  * is Phase B2.
  */

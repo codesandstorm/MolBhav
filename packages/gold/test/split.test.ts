@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { MOVES } from '@molbhav/analyser';
-import { sha256, stratifiedSplit, toJsonl } from '../src/split.ts';
+import { reportStub, sha256, stratifiedSplit, toJsonl } from '../src/split.ts';
 import type { LabelRow, MessageRow } from '../src/schema.ts';
 
 /** 100 clearly fake rows (source "fixture"): never gold, never written to ml/gold/. */
@@ -15,6 +15,7 @@ const rows = Array.from({ length: 100 }, (_, i) => ({
 const labels: LabelRow[] = rows.map((m, i) => ({
   message_id: m.id,
   version: 'v1',
+  context: { quote_rupees: null, quote_unit: null },
   move: MOVES[i % 5]!, // 5 classes × 20 rows; OTHER has none
   objection: 'NONE',
   conditional: MOVES[i % 5] === 'CONCESSION' ? false : null,
@@ -54,4 +55,19 @@ describe('stratified split and freeze', () => {
   it('sha256 is the standard digest', () =>
     // sha256("abc"), the FIPS 180-2 test vector
     expect(sha256('abc')).toBe('ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad'));
+
+  it('the eval report carries the AI-assistance disclosure and the objection rule, verbatim', () => {
+    const r = reportStub({
+      test_sha256: 'x',
+      frozen_at: '2026-11-11T00:00:00.000Z',
+      seed: 42,
+      guidelines_version: 'v0.2',
+      messages: 100,
+      counts: s.counts,
+    });
+    expect(r).toContain(
+      'The prompt cards, the guideline examples and the rule baseline were drafted with AI assistance; the gold messages themselves are written and labelled by the author.',
+    );
+    expect(r).toContain('Objection types are scored for the rules only, labelled ESTIMATE');
+  });
 });

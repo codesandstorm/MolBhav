@@ -131,6 +131,8 @@ const ROUND: Record<Scale, bigint> = {
   hourly: 50n,
 };
 
+export type QuoteUnit = 'fixed' | 'hour' | 'month';
+
 export interface Card {
   card_id: string;
   scenario_id: string;
@@ -139,6 +141,10 @@ export interface Card {
   quote_sent: boolean;
   /** the freelancer's quote, as the card shows it */
   quote_text: string;
+  /** the same quote as whole rupees (digits); the scenario's quote, whether or not it is sent */
+  quote_rupees: string;
+  /** what the quote is per: a fixed price, per hour or per month */
+  quote_unit: QuoteUnit;
   intended_move: Move;
   objection: Obj;
   language: Language;
@@ -157,7 +163,8 @@ export interface Card {
   ambiguous: boolean;
 }
 
-const unitOf = (s: Scale): Unit => (s === 'hourly' ? 'hour' : s === 'monthly' ? 'month' : 'fixed');
+const unitOf = (s: Scale): QuoteUnit =>
+  s === 'hourly' ? 'hour' : s === 'monthly' ? 'month' : 'fixed';
 const quoteText = (sc: Scenario) =>
   sc.scale === 'hourly'
     ? formatAmount(sc.quote, 'per_hour')
@@ -176,8 +183,17 @@ export const generateCards = (seed = SEED): Card[] => {
     const objections = shuffle(quota(OBJECTION_QUOTA[move], PER_CLASS), r);
     const formats = shuffle(quota(FORMAT_QUOTA[move], PER_CLASS), r);
     const languages = shuffle(quota<Language>({ en: 25, hinglish: 25 }, PER_CLASS), r);
+    // ACCEPT needs a quote to accept (GUIDELINES J7), so every ACCEPT card has one. A quota
+    // change does not move the seeded stream: shuffle draws the same numbers whatever the values.
     const quoteSent = shuffle(
-      quota<'y' | 'n'>(move === 'PRICE_POSITION' ? { y: 25, n: 25 } : { y: 35, n: 15 }, PER_CLASS),
+      quota<'y' | 'n'>(
+        move === 'PRICE_POSITION'
+          ? { y: 25, n: 25 }
+          : move === 'ACCEPT'
+            ? { y: 50, n: 0 }
+            : { y: 35, n: 15 },
+        PER_CLASS,
+      ),
       r,
     );
     const amb = AMBIGUOUS[mi]!;
@@ -191,12 +207,15 @@ export const generateCards = (seed = SEED): Card[] => {
       const pool =
         fmt === 'none' ? SCENARIOS : SCENARIOS.filter((s) => COMPATIBLE[fmt].includes(s.scale));
       const sc = pool[Math.floor(r() * pool.length)]!;
-      const sent = quoteSent[i] === 'y';
+      // a card that asks the writer to mention the quote must have a quote sent
+      const sent = quoteSent[i] === 'y' || (fmt !== 'none' && ROLE[move] === 'quote_reference');
       const base: Omit<Card, 'card_id'> = {
         scenario_id: sc.id,
         work: sc.work,
         quote_sent: sent,
         quote_text: quoteText(sc),
+        quote_rupees: sc.quote.toString(),
+        quote_unit: unitOf(sc.scale),
         intended_move: move,
         objection: objections[i]!,
         language: languages[i]!,
@@ -242,6 +261,28 @@ export const generateCards = (seed = SEED): Card[] => {
   });
   // interleave the classes in writing order, then number the cards
   return shuffle(cards, r).map((c, i) => ({ card_id: `c${String(i + 1).padStart(3, '0')}`, ...c }));
+};
+
+/**
+ * What the blind labeller is told about the deal (GUIDELINES §0): the quote, if one has been
+ * sent, and nothing else. Stored with each label so the scorer knows what the labeller saw.
+ */
+export interface LabelContext {
+  /** whole rupees as digits, or null when no quote has been sent */
+  quote_rupees: string | null;
+  quote_unit: QuoteUnit | null;
+}
+export const labelContext = (c: Card): LabelContext =>
+  c.quote_sent
+    ? { quote_rupees: c.quote_rupees, quote_unit: c.quote_unit }
+    : { quote_rupees: null, quote_unit: null };
+
+/** The one neutral context line, shown above the message in both tools. */
+export const contextLine = (x: LabelContext): string => {
+  if (x.quote_rupees === null) return 'No quote sent yet';
+  const amount = formatAmount(BigInt(x.quote_rupees), 'rupee_comma');
+  const per = x.quote_unit === 'hour' ? ' per hour' : x.quote_unit === 'month' ? ' per month' : '';
+  return `Freelancer's quote so far: ${amount}${per}`;
 };
 
 /** One readable instruction per card, for the writing tool. */

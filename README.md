@@ -2,7 +2,7 @@
 
 MolBhav helps freelancers in India prepare for a price negotiation. It works out a price ladder (floor, target, opening) from your own inputs, on your device. It does not give you a market rate. [EVIDENCE: docs/product/13_price_ladder_spec.md]
 
-MolBhav is a solo student project in active development. Built so far: Phase A (the price ladder) and Phase A2 (the locked v1.0 design language, the redesigned app and the showcase) and its A2.1 polish (one scene model for the poster and the live hero, atmosphere, the real-app product shot, the quote track). B1.1 adds the gold-set tools, the amount parser and rule baseline, and a "Read your client's reply" screen; the gold set itself is not written yet, so the rules are not scored. [EVIDENCE: docs/product/progress_log.md]
+MolBhav is a solo student project in active development. Built so far: Phase A (the price ladder) and Phase A2 (the locked v1.0 design language, the redesigned app and the showcase) and its A2.1 polish (one scene model for the poster and the live hero, atmosphere, the real-app product shot, the quote track). B1.1 adds the gold-set tools, the amount parser and rule baseline, and a "Read your client's reply" screen; B1.1b approves the labelling guidelines (v0.2), shows the freelancer's quote as context in the gold tools, and prepares a Cloudflare Pages deploy (not deployed). The gold set itself is not written yet, so the rules are not scored. [EVIDENCE: docs/product/progress_log.md]
 
 ## Layout
 
@@ -44,11 +44,17 @@ Locally, `test:e2e` uses the installed Microsoft Edge. In CI it uses Playwright'
 
 The budget check measures the built site through a gzip static server under a throttled mobile profile (360 px, 150 ms RTT, 1.6 Mbps, 4× CPU). That is a lab proxy, not a real phone. Budgets live in `apps/site/budgets.ts` [EVIDENCE: docs/product/08_experience_and_brand.md §8.3].
 
-Review screenshots (app: welcome, setup, ladder, evidence, settings; site: hero poster, hero live, ladder story, pillars, how it works, the real app, trust band, footer, and hero before/after pairs for A2.1; 360, 768 and 1280 px) are in `docs/product/screens/`. Regenerate them with `node apps/site/scripts/screens.ts` while both previews run. The showcase's product shot (`apps/site/public/product/app-ladder.webp`) is a screenshot of the real app with its made-up example deal; it is not made by the build. Rerun `node apps/site/scripts/product-shot.ts` with the app preview running after changing the ladder screen.
+Review screenshots (app: welcome, setup, ladder, evidence, settings; site: hero poster, hero live, ladder story, pillars, how it works, the real app, trust band, footer, and hero before/after pairs for A2.1; 360, 768 and 1280 px) are in `docs/product/screens/`. Regenerate them with `node apps/site/scripts/screens.ts` while both previews run (add `--only app-reader` for just the reader screen; it needs only the app preview). The showcase's product shot (`apps/site/public/product/app-ladder.webp`) is a screenshot of the real app with its made-up example deal; it is not made by the build.
+
+**Re-run `npm run shots:product` whenever the app's ladder screen changes.** It builds the app, serves it locally, retakes the shot and records which source it came from; the site's unit test fails while the shot is older than the ladder screen's source files [EVIDENCE: apps/site/test/product-shot.test.ts].
+
+## Deploy
+
+Not deployed. Cloudflare Pages settings, headers and the step-by-step dashboard guide are in [docs/product/16_deploy.md](docs/product/16_deploy.md). The headers live in `apps/app/public/_headers` and `apps/site/public/_headers`; `npm run test:e2e` checks both builds under them.
 
 ## Writing and labelling the gold set (Windows)
 
-The tools run only on your own computer, at `127.0.0.1`; nothing is sent anywhere. What you write is saved in `ml/gold/data/`, which git ignores [EVIDENCE: ml/gold/data/README.md]. Read `ml/gold/GUIDELINES.md` first (v0.1 DRAFT).
+The tools run only on your own computer, at `127.0.0.1`; nothing is sent anywhere. What you write is saved in `ml/gold/data/`, which git ignores [EVIDENCE: ml/gold/data/README.md]. Read `ml/gold/GUIDELINES.md` first (v0.2).
 
 **Write the messages, one per prompt card**
 
@@ -57,7 +63,7 @@ The tools run only on your own computer, at `127.0.0.1`; nothing is sent anywher
 3. First time only: `npm ci`.
 4. Start the writing tool: `npm run gold:write`.
 5. Open **http://127.0.0.1:4410/** in Edge or Chrome.
-6. Read the card, write the client's message in your own words, pick the language, then **Save and next (Ctrl+Enter)**.
+6. Read the card, write the client's message in your own words, pick the language, then **Save and next (Ctrl+Enter)**. Under the card you see the one line the labeller will see about the deal ("Freelancer's quote so far: ₹…" or "No quote sent yet"); keep the message consistent with it.
    - **Skip this card** leaves a card for later.
    - **Previous card** and **Next card** let you edit a saved message until it has been labelled.
    - The timer pauses while the tab is hidden.
@@ -66,7 +72,7 @@ The tools run only on your own computer, at `127.0.0.1`; nothing is sent anywher
 **Label them blind, after writing**
 
 1. Run `npm run gold:label` and open **http://127.0.0.1:4411/**.
-2. You see only the message text, shuffled. You never see the card or the intended move.
+2. You see the message text and one line about the freelancer's quote, shuffled. You never see the card or the intended move.
 3. Choose the move, the objection, **Conditional?** (shown only for CONCESSION), the amount fields and **Unsure**, then **Save and next**.
 4. At least 14 days later, run the retest pass: `npm run gold:label -- --pass v2`. It only offers messages whose first label is 14 or more days old.
 

@@ -1,5 +1,7 @@
 {
   "src": "/product/app-ladder.webp",
   "width": 390,
-  "height": 760
+  "height": 760,
+  "screen": "ladder",
+  "sourceSha256": "367f0f8056d9964b46b0958111a09b6e59b98d9fb52fed56f8268ea07923787c"
 }

@@ -12,14 +12,16 @@
     <main>
       <h1>Gold set · blind labelling, pass <span id="pass"></span></h1>
       <p class="note">
-        Local only: nothing leaves this computer. You see the message text only: no card, no
-        intended move, no language, no earlier label. Use ml/gold/GUIDELINES.md.
+        Local only: nothing leaves this computer. You see the message and one line about the
+        freelancer's quote, nothing else: no card, no intended move, no language, no earlier label.
+        Use ml/gold/GUIDELINES.md (§0).
       </p>
       <p id="progress" class="muted" aria-live="polite"></p>
       <p id="finished" class="panel" hidden>Nothing left to label in this pass.</p>
       <form id="form">
         <section class="panel" aria-labelledby="msg-title">
           <h2 id="msg-title">Message</h2>
+          <p id="context" class="muted"></p>
           <p id="message" class="message"></p>
         </section>
         <fieldset>

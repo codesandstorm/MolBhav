@@ -95,6 +95,8 @@ export const reportStub = (f: Frozen) => {
 - One person wrote, labelled and designed the analyser: circularity is reduced (blind labelling, a frozen hashed test split, a disclosed LLM second annotator), not removed.
 - Self-authored messages only. Nothing here measures accuracy on real client messages, other people's writing, or other Hinglish varieties.
 - There is no human inter-annotator agreement: there is one human.
+- The prompt cards, the guideline examples and the rule baseline were drafted with AI assistance; the gold messages themselves are written and labelled by the author.
+- Objection types are scored for the rules only, labelled ESTIMATE, and reported as "too few to score" unless the test split has ≥ 10 items per type.
 
 ## Frozen test split
 | Field | Value |

@@ -347,6 +347,10 @@ h1 em {
 .poster {
   transition: opacity var(--mb-duration-slow) var(--mb-ease-settle);
 }
+/* a class, not a style attribute, so the site's CSP needs no 'unsafe-inline' for styles */
+.poster .blend-light {
+  mix-blend-mode: plus-lighter;
+}
 .stage[data-hero='live'] .poster {
   opacity: 0;
 }

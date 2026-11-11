@@ -1,0 +1,25 @@
+# Cloudflare Pages headers for the showcase (docs/product/16_deploy.md). Copied to dist/ by the
+# build. apps/site/e2e/csp.spec.ts serves the build with exactly this file and checks that the
+# page and the 3D scene work under it and that a request to another origin is blocked.
+#
+# No 'unsafe-inline', no 'unsafe-eval'. Astro writes three small inline blocks into the page
+# for its island (the hero): the island loader script, the media-directive script and one
+# `astro-island { display: contents }` style. They are allowed by their sha256 hashes below.
+# The hashes change only when Astro's runtime changes (an Astro upgrade); the CSP test then
+# fails and names the blocked block. Recompute with the snippet in docs/product/16_deploy.md.
+
+/*
+  Content-Security-Policy: default-src 'self'; connect-src 'self'; script-src 'self' 'sha256-kmZE/W8I1iuTnl1b3yqzv9/DQZenPngd3NjSKMQl7y0=' 'sha256-UIrFqcaitjA3OKa9mHKajg3N+0Y7tW9+y0o3QmMFeZQ='; style-src 'self' 'sha256-vv9IoKo7BSLbWcUHr3tNmfNVmm5L/9Cfn2H6LMk7/ow='; img-src 'self' data:; font-src 'self'; worker-src 'self'; object-src 'none'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: no-referrer
+  Permissions-Policy: camera=(), microphone=(), geolocation=()
+
+# Hashed build output: the file name changes when the content does.
+/_astro/*
+  Cache-Control: public, max-age=31536000, immutable
+
+# The page is always checked for a newer version.
+/
+  Cache-Control: no-cache
+/index.html
+  Cache-Control: no-cache

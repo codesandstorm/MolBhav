@@ -1,6 +1,6 @@
 /**
  * The label vocabulary shared by the gold-set toolchain, the rules and the app.
- * Source: ml/gold/GUIDELINES.md v0.1 (DRAFT) and D11 option S
+ * Source: ml/gold/GUIDELINES.md v0.2 and D11 option S
  * (docs/product/04_research_integrity.md §2.3).
  */
 

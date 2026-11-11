@@ -5,7 +5,7 @@ import { join } from 'node:path';
 import type { AddressInfo } from 'node:net';
 import type { Server } from 'node:http';
 import { afterEach, describe, expect, it } from 'vitest';
-import { generateCards } from '../src/cards.ts';
+import { contextLine, generateCards, labelContext } from '../src/cards.ts';
 import { parseJsonl, type LabelRow, type MessageRow } from '../src/schema.ts';
 import { createToolServer, type ToolOptions } from '../src/tool-server.ts';
 
@@ -13,7 +13,9 @@ import { createToolServer, type ToolOptions } from '../src/tool-server.ts';
  * The tools are exercised in a temporary folder outside the repository, with text marked
  * "[FIXTURE, not gold]". Nothing here touches ml/gold/.
  */
-const cards = generateCards().slice(0, 3);
+// three cards: two with a quote sent, one without, so both context lines are exercised
+const all = generateCards();
+const cards = [...all.filter((c) => c.quote_sent).slice(0, 2), all.find((c) => !c.quote_sent)!];
 const staticDir = join(import.meta.dirname, '..', 'tools');
 let server: Server | null = null;
 let dir = '';
@@ -115,9 +117,14 @@ describe('writing tool', () => {
     expect((await call(port, 'POST', '/api/skip', { card_id: b })).status).toBe(200);
     const state = (await call(port, 'GET', '/api/state')).json() as {
       messages: { id: string; card_id: string }[];
+      cards: { card_id: string; context: string }[];
       skipped: string[];
       median_seconds: number;
     };
+    // the writing tool shows the same quote fact the labeller will see
+    expect(state.cards.map((c) => c.context)).toEqual(
+      cards.map((c) => contextLine(labelContext(c))),
+    );
     expect(state.messages.map((m) => m.card_id)).toEqual([a]);
     expect(state.skipped).toEqual([b]);
     expect(state.median_seconds).toBe(61.2);
@@ -193,7 +200,7 @@ describe('blind labelling tool', () => {
     );
   };
 
-  it('shows message text only (no card, intent or language), shuffled, and saves v1 labels', async () => {
+  it('shows the message and one quote context line only (no card, intent or language), shuffled, and saves v1 labels', async () => {
     seed();
     const port = await start({ mode: 'label', pass: 'v1' });
     const state = (await call(port, 'GET', '/api/state')).json() as {
@@ -201,7 +208,20 @@ describe('blind labelling tool', () => {
       total: number;
     };
     expect(state.total).toBe(3);
-    for (const q of state.queue) expect(Object.keys(q).sort()).toEqual(['id', 'text']);
+    const cardOf = (id: unknown) => cards[Number(String(id).slice(1)) - 1]!;
+    for (const q of state.queue) {
+      expect(Object.keys(q).sort()).toEqual(['context', 'id', 'text']);
+      const c = cardOf(q.id);
+      expect(q.context).toBe(
+        c.quote_sent ? `Freelancer's quote so far: ${c.quote_text}` : 'No quote sent yet',
+      );
+      // nothing else from the card leaks into the context line
+      for (const leak of [c.intended_move, c.objection, c.work, c.amount_format, 'hinglish'])
+        expect(String(q.context)).not.toContain(leak);
+    }
+    const lines = state.queue.map((q) => String(q.context));
+    expect(lines.filter((l) => l === 'No quote sent yet')).toHaveLength(1);
+    expect(lines.filter((l) => l.startsWith("Freelancer's quote so far: ₹"))).toHaveLength(2);
     const first = state.queue[0]!.id as string;
     expect((await call(port, 'POST', '/api/save', label(first))).status).toBe(200);
     const bad = await call(port, 'POST', '/api/save', { ...label(first), move: 'MAYBE' });
@@ -209,6 +229,15 @@ describe('blind labelling tool', () => {
     const rows = parseJsonl<LabelRow>(readFileSync(join(dir, 'labels_v1.jsonl'), 'utf8'));
     expect(rows).toHaveLength(1);
     expect(rows[0]).toMatchObject({ message_id: first, version: 'v1', labelling_seconds: 12.3 });
+    // the stored context comes from the card, not from the request
+    expect(rows[0]!.context).toEqual(labelContext(cardOf(first)));
+    const forged = await call(port, 'POST', '/api/save', {
+      ...label(first),
+      context: { quote_rupees: '1', quote_unit: 'fixed' },
+    });
+    expect(forged.status).toBe(200);
+    const again = parseJsonl<LabelRow>(readFileSync(join(dir, 'labels_v1.jsonl'), 'utf8'));
+    expect(again[0]!.context).toEqual(labelContext(cardOf(first)));
     const after = (await call(port, 'GET', '/api/state')).json() as {
       queue: unknown[];
       done: number;

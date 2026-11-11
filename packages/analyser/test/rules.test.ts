@@ -3,7 +3,7 @@ import { join } from 'node:path';
 import fc from 'fast-check';
 import { describe, expect, it } from 'vitest';
 import { LOW_CONFIDENCE, MOVES, OBJECTIONS } from '../src/labels.ts';
-import { analyse, RULES_VERSION, type Analysis } from '../src/rules.ts';
+import { analyse, RULES_VERSION, type Analysis, type DealState } from '../src/rules.ts';
 
 /*
  * Fixture rows: made-up tooling examples (most are the ILLUSTRATIVE examples in
@@ -73,8 +73,8 @@ describe('invariants', () => {
     '₹45,000 per hour, 18% GST, 3 revisions, by 15th Nov',
     'no no no',
   ];
-  const check = (text: string) => {
-    const a = analyse(text);
+  const check = (text: string, state: DealState = { quoteSent: null }) => {
+    const a = analyse(text, state);
     // no output without evidence
     if (a.move !== null) expect(a.evidence.some((e) => e.supports === a.move)).toBe(true);
     if (a.objection !== null) expect(a.evidence.some((e) => e.supports === a.objection)).toBe(true);
@@ -92,7 +92,7 @@ describe('invariants', () => {
     // evidence spans index the text
     for (const e of a.evidence) expect(text.slice(e.start, e.end)).toBe(e.phrase);
     // same input → same output
-    expect(json(analyse(text))).toBe(json(a));
+    expect(json(analyse(text, state))).toBe(json(a));
     expect(a.source).toBe('rules');
     expect(a.version).toBe(RULES_VERSION);
   };
@@ -141,8 +141,10 @@ describe('invariants', () => {
       'quoted',
     );
     fc.assert(
-      fc.property(fc.array(fc.oneof(words, fc.string({ maxLength: 6 })), { maxLength: 25 }), (ws) =>
-        check(ws.join(' ')),
+      fc.property(
+        fc.array(fc.oneof(words, fc.string({ maxLength: 6 })), { maxLength: 25 }),
+        fc.constantFrom<boolean | null>(true, false, null),
+        (ws, quoteSent) => check(ws.join(' '), { quoteSent }),
       ),
       { seed: 42, numRuns: 300 },
     );
@@ -160,5 +162,65 @@ describe('invariants', () => {
     const a = analyse('Can you do it for 28k?') as unknown as Record<string, unknown>;
     for (const k of ['floor', 'target', 'opening']) expect(k in a).toBe(false);
     expect(a.amount).toMatchObject({ rupees: 28000n });
+  });
+});
+
+describe('quote-aware rules use the deal state (GUIDELINES v0.2 J5, J7, §4)', () => {
+  const sent: DealState = { quoteSent: true };
+  const none: DealState = { quoteSent: false };
+  const unknown: DealState = { quoteSent: null };
+
+  it('repeating the quote is not a price position', () => {
+    for (const s of [sent, unknown]) {
+      const q = analyse('You said 45k, right?', s);
+      expect(q.move).toBe('INFO_REQUEST');
+      expect(q.anchorOrCounter).toBeNull();
+      expect(q.amount.candidates.every((c) => c.role !== 'price')).toBe(true);
+      expect(analyse('Aapne 45 hazaar bola tha.', s).move).not.toBe('PRICE_POSITION');
+    }
+  });
+
+  it('"you quoted 45k, we can do 32k": the client price is 32k, a COUNTER after a quote', () => {
+    const a = analyse('You quoted 45k, we can do 32k.', sent);
+    expect(a).toMatchObject({ move: 'PRICE_POSITION', anchorOrCounter: 'COUNTER' });
+    expect(a.amount.rupees).toBe(32000n);
+    expect(a.evidence.find((e) => e.rule === 'client-price')?.phrase).toBe('32k');
+    expect(analyse('You quoted 45k, we can do 32k.', unknown).anchorOrCounter).toBeNull();
+  });
+
+  it('a bare "ok" after a quote is ACCEPT; with no quote sent it is OTHER (J7)', () => {
+    for (const t of ['ok', 'Okay.', 'theek hai', 'done', 'haan']) {
+      expect([t, analyse(t, sent).move]).toEqual([t, 'ACCEPT']);
+      const a = analyse(t, none);
+      expect([t, a.move]).toEqual([t, 'OTHER']);
+      expect(a.evidence.map((e) => e.rule)).toContain('bare-ok-no-quote');
+      expect([t, analyse(t, unknown).move]).toEqual([t, 'ACCEPT']);
+    }
+  });
+
+  it('a full acceptance after a quote stays ACCEPT, whatever the state', () => {
+    for (const s of [sent, none, unknown])
+      expect(analyse("Sounds good, let's go ahead. Send me the invoice.", s).move).toBe('ACCEPT');
+    expect(analyse('ok 45k done, kal se start karo', sent).move).toBe('ACCEPT');
+  });
+
+  it('J5: a number with a movement word is CONCESSION after a quote', () => {
+    for (const t of ['Ok, 38k then.', 'Chalo, 40 hazaar de denge.']) {
+      const a = analyse(t, sent);
+      expect([t, a.move]).toEqual([t, 'CONCESSION']);
+      expect(a.evidence.map((e) => e.rule)).toContain('number-with-movement');
+    }
+  });
+
+  it('J5 with no quote sent: only explicit movement makes a number a CONCESSION', () => {
+    const weak = analyse('Chalo, 40 hazaar de denge.', none);
+    expect(weak).toMatchObject({ move: 'PRICE_POSITION', anchorOrCounter: 'ANCHOR' });
+    expect(weak.evidence.map((e) => e.rule)).not.toContain('number-with-movement');
+    expect(analyse('We can go up to 38k.', none).move).toBe('CONCESSION');
+  });
+
+  it('movement without a number does not depend on the quote', () => {
+    for (const s of [sent, none, unknown])
+      expect(analyse('Fine, you can take two more days.', s).move).toBe('CONCESSION');
   });
 });

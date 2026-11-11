@@ -62,6 +62,7 @@
     $('finished').hidden = Boolean(item);
     $('form').hidden = !item;
     if (!item) return;
+    $('context').textContent = item.context;
     $('message').textContent = item.text;
     $('form').reset();
     $('conditional-box').hidden = true;

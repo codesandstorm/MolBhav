@@ -1040,7 +1040,15 @@ details[open] > summary .disclosure-icon {
 .reader-input,
 .reader-result {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: var(--mb-space-5);
+}
+/* at 360 px the move picker's min-content width pushed the page 3 px wide */
+.reader {
+  grid-template-columns: minmax(0, 1fr);
+}
+.reader .choice {
+  min-inline-size: 0;
 }
 .textarea-row {
   margin-top: var(--mb-space-1);
@@ -1082,6 +1090,7 @@ details[open] > summary .disclosure-icon {
 }
 .reader-row {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: var(--mb-space-3);
   padding-top: var(--mb-space-4);
   border-top: 1px solid var(--mb-color-border);
@@ -1109,7 +1118,12 @@ details[open] > summary .disclosure-icon {
 .reader-sub {
   margin: 0;
 }
-.reader-select {
+.reader-result > h3 {
+  margin: 0;
+}
+/* the amount inputs line up with the selects below them */
+.reader-select,
+.reader-row[data-reader='amount'] > .field {
   max-width: 22rem;
 }
 .input-row select {

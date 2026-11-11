@@ -6,8 +6,9 @@
  * - provider and model come from the environment; the key comes from the environment only
  *   (MOLBHAV_LLM_API_KEY), is never written to disk, and is redacted from every message;
  * - temperature 0;
- * - the model sees the guidelines and the message text only: never the card, the intended
- *   move, or the author's pass-1 labels;
+ * - the model sees the guidelines, the message text and the same one-line quote context the
+ *   blind labeller sees (GUIDELINES §0): never the card, the intended move, or the author's
+ *   pass-1 labels;
  * - every run stores the prompt template, its sha256, the guidelines' sha256, the provider,
  *   the model and version, and the date, next to the results.
  */
@@ -41,7 +42,7 @@ export interface Adapter {
 export const ADAPTERS: Record<string, Adapter> = {};
 
 export const PROMPT_TEMPLATE = `You are labelling one message for a research gold set, using only the labelling guidelines below.
-The message was written by the project's author as a client message to a freelancer. Label only what the text says.
+The message was written by the project's author as a client message to a freelancer. Label only from the text and the one context line about the freelancer's quote.
 Reply with one JSON object and nothing else, with exactly these fields:
 {"move": one of PRICE_POSITION|PUSHBACK|CONCESSION|INFO_REQUEST|ACCEPT|OTHER,
  "objection": one of BUDGET|SCOPE|TIMELINE|PAYMENT_TERMS|TRUST|COMPETITOR|NONE,
@@ -54,11 +55,11 @@ Reply with one JSON object and nothing else, with exactly these fields:
 {{GUIDELINES}}
 === END GUIDELINES ===`;
 
-export const buildPrompt = (guidelines: string, messageText: string) => {
+export const buildPrompt = (guidelines: string, messageText: string, context = '') => {
   const system = PROMPT_TEMPLATE.replace('{{GUIDELINES}}', guidelines);
   return {
     system,
-    user: `Message:\n${messageText}`,
+    user: `${context ? `Context: ${context}\n` : ''}Message:\n${messageText}`,
     templateSha256: sha256(PROMPT_TEMPLATE),
     guidelinesSha256: sha256(guidelines),
   };
@@ -110,5 +111,6 @@ export const runRecord = (
   prompt_template: PROMPT_TEMPLATE,
   prompt_template_sha256: p.templateSha256,
   guidelines_sha256: p.guidelinesSha256,
-  inputs: 'guidelines + message text only (no cards, no intended moves, no pass-1 labels)',
+  inputs:
+    'guidelines + message text + the one quote context line (no cards, no intended moves, no pass-1 labels)',
 });

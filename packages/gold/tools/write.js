@@ -45,6 +45,7 @@
         return p;
       }),
     );
+    $('context').textContent = card.context;
     $('text').value = msg ? msg.text : '';
     $('text').readOnly = Boolean(msg && msg.labelled);
     const lang = msg ? msg.language : card.language;

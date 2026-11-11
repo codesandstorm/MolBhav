@@ -1,0 +1,26 @@
+# Cloudflare Pages headers for the app (docs/product/16_deploy.md). Copied to dist/ by the
+# build. apps/app/e2e/csp.spec.ts serves the build with exactly this file and checks that the
+# app works under it and that a request to another origin is blocked.
+# No 'unsafe-inline', no 'unsafe-eval': the app has no inline script or style in its HTML.
+
+/*
+  Content-Security-Policy: default-src 'self'; connect-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; font-src 'self'; worker-src 'self'; manifest-src 'self'; object-src 'none'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: no-referrer
+  Permissions-Policy: camera=(), microphone=(), geolocation=()
+
+# Hashed build output: the file name changes when the content does.
+/assets/*
+  Cache-Control: public, max-age=31536000, immutable
+
+# Never cached without a check: the page, the service worker and what it loads first.
+/
+  Cache-Control: no-cache
+/index.html
+  Cache-Control: no-cache
+/sw.js
+  Cache-Control: no-cache
+/registerSW.js
+  Cache-Control: no-cache
+/manifest.webmanifest
+  Cache-Control: no-cache

@@ -1,6 +1,8 @@
 /**
- * Rule baseline for reading a client message (S4b), written from ml/gold/GUIDELINES.md v0.1
- * (§1 moves, §3 objections, §5 rule-decided parts) before any gold message exists. Weights and
+ * Rule baseline for reading a client message (S4b), written from ml/gold/GUIDELINES.md v0.2
+ * (§1 moves, §3 objections, §5 rule-decided parts) before any gold message exists. The rules
+ * that depend on the quote (J5, J7) read it from the deal state they are given, the same fact
+ * the blind labeller sees (GUIDELINES §0); they never guess it from the text. Weights and
  * the low-confidence threshold are first guesses [HYPOTHESIS]; they may later be tuned on the
  * dev split only, never on test (docs/product/04_research_integrity.md §2).
  *
@@ -11,7 +13,7 @@
 import { readAmount, type AmountReading } from './amount.ts';
 import { MOVES, OBJECTIONS, type Move, type Objection } from './labels.ts';
 
-export const RULES_VERSION = 'rules 0.1 (GUIDELINES v0.1 DRAFT)';
+export const RULES_VERSION = 'rules 0.2 (GUIDELINES v0.2)';
 
 /** The deal state the rules need (GUIDELINES §5.1): has the freelancer sent a quote? null = not known. */
 export interface DealState {
@@ -402,6 +404,11 @@ const MOVE_ORDER: readonly Move[] = [
   'INFO_REQUEST',
   'OTHER',
 ];
+/**
+ * Movement words that say on their own that the client is moving ("we can go up to …"). With
+ * no quote sent, only these make a number a CONCESSION (J5); "ok", "chalo", "de denge" do not.
+ */
+const EXPLICIT_MOVEMENT = new Set(['i-can-stretch', 'stretch-to', 'raise-offer']);
 /** a message of nothing but "ok" / "yes" / "theek hai" (J7) */
 const BARE_OK =
   /^\s*(?:ok(?:ay)?|yes|yeah|yep|haan|ha|ji|theek\s+hai|thik\s+hai|chalega|done|sure)\s*[.!]*\s*$/i;
@@ -473,8 +480,12 @@ export const analyse = (text: string, state: DealState = { quoteSent: null }): A
 
   // ---- structural rules from the tie-breaks
   const has = (id: string) => evidence.some((e) => e.rule === id);
-  const movement = evidence.some((e) => e.supports === 'CONCESSION');
-  // J5: a number with a movement word is CONCESSION, not PRICE_POSITION
+  const noQuote = state.quoteSent === false;
+  // J5: a number with a movement word is CONCESSION, not PRICE_POSITION. With no quote sent
+  // there is nothing to move towards unless the words say so, so only explicit movement counts.
+  const movement = evidence.some(
+    (e) => e.supports === 'CONCESSION' && (!noQuote || !price || EXPLICIT_MOVEMENT.has(e.rule)),
+  );
   if (price && movement)
     add({
       phrase: price.span.text,
@@ -484,10 +495,17 @@ export const analyse = (text: string, state: DealState = { quoteSent: null }): A
       weight: 2,
       rule: 'number-with-movement',
     });
-  // J7: "ok" alone is ACCEPT
-  if (BARE_OK.test(text) && has('ok-yes')) {
-    const e = evidence.find((x) => x.rule === 'ok-yes')!;
-    add({ ...e, weight: 2, rule: 'bare-ok' });
+  // J7: "ok" alone is ACCEPT after a quote; with no quote sent there is nothing to accept, so it
+  // is OTHER (the labeller ticks unsure). Unknown deal state keeps the ACCEPT reading.
+  const bareOk = BARE_OK.test(text);
+  if (bareOk && (has('ok-yes') || has('deal-done'))) {
+    const e = evidence.find((x) => x.rule === 'ok-yes' || x.rule === 'deal-done')!;
+    add({
+      ...e,
+      supports: noQuote ? 'OTHER' : 'ACCEPT',
+      weight: 2,
+      rule: noQuote ? 'bare-ok-no-quote' : 'bare-ok',
+    });
   }
   // a price question is not an information request (§1 INFO_REQUEST: "not what's the price")
   const priceAsk =
@@ -513,6 +531,10 @@ export const analyse = (text: string, state: DealState = { quoteSent: null }): A
       continue;
     // J2: a complaint with a client price on the table is PRICE_POSITION, not PUSHBACK
     if (price && !movement && e.supports === 'PUSHBACK') continue;
+    // J5 with no quote sent: a number with only weak movement words stays PRICE_POSITION
+    if (price && !movement && e.supports === 'CONCESSION') continue;
+    // J7 with no quote sent: a bare "ok" is not an acceptance
+    if (noQuote && bareOk && e.supports === 'ACCEPT') continue;
     // a weak yes before a "but" does not count when another move follows the "but" (J7)
     if (e.rule === 'ok-yes' && otherMoveAfterBut && but !== null && e.start < but.index) continue;
     scores[e.supports] += e.weight;

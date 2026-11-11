@@ -13,6 +13,7 @@ import { CURRENCIES, LANGUAGES, MOVES, OBJECTIONS, UNITS } from '@molbhav/analys
 export const SOURCE = 'self_authored' as const;
 export const OBJECTION_VALUES = [...OBJECTIONS, 'NONE'] as const;
 export const LABEL_VERSIONS = ['v1', 'v2', 'llm'] as const;
+export const QUOTE_UNITS = ['fixed', 'hour', 'month'] as const;
 export const ADJUDICATION_FIELDS = ['move', 'objection', 'conditional', 'amount'] as const;
 
 export type LabelVersion = (typeof LABEL_VERSIONS)[number];
@@ -34,9 +35,16 @@ export interface LabelCore {
   unsure: boolean;
 }
 
+/** What the labeller was shown about the deal (GUIDELINES §0); mirrors cards.ts LabelContext. */
+export interface LabelContextRow {
+  quote_rupees: string | null;
+  quote_unit: (typeof QUOTE_UNITS)[number] | null;
+}
+
 export interface LabelRow extends LabelCore {
   message_id: string;
   version: LabelVersion;
+  context: LabelContextRow;
   labelled_at: string;
   /** measured by the labelling tool; null for the LLM annotator */
   labelling_seconds: number | null;
@@ -127,6 +135,22 @@ const validateCore = (r: Record<string, unknown>, at: string): string[] => {
 
 const CORE = ['move', 'objection', 'conditional', 'amount', 'unsure'];
 
+export const validateContext = (c: unknown, at: string): string[] => {
+  if (!obj(c)) return [`${at}: context must be an object`];
+  const req = ['quote_rupees', 'quote_unit'];
+  const e = [...missing(c, req, at), ...extra(c, req, at)];
+  if (e.length) return e;
+  if (c.quote_rupees === null) {
+    if (c.quote_unit !== null) e.push(`${at}: with no quote, quote_unit must be null`);
+  } else {
+    if (typeof c.quote_rupees !== 'string' || !DIGITS.test(c.quote_rupees))
+      e.push(`${at}: quote_rupees must be whole rupees as digits, or null`);
+    if (!oneOf(c.quote_unit, QUOTE_UNITS))
+      e.push(`${at}: quote_unit must be one of ${QUOTE_UNITS.join(', ')}`);
+  }
+  return e;
+};
+
 export const validateMessage = (r: unknown, at = 'message'): string[] => {
   if (!obj(r)) return [`${at}: not an object`];
   const req = ['id', 'text', 'source', 'card_id', 'language', 'labels'];
@@ -166,9 +190,10 @@ export const validateMessage = (r: unknown, at = 'message'): string[] => {
 
 export const validateLabel = (r: unknown, at = 'label'): string[] => {
   if (!obj(r)) return [`${at}: not an object`];
-  const req = ['message_id', 'version', ...CORE, 'labelled_at', 'labelling_seconds'];
+  const req = ['message_id', 'version', 'context', ...CORE, 'labelled_at', 'labelling_seconds'];
   const e = [...missing(r, req, at), ...extra(r, req, at)];
   if (e.length) return e;
+  e.push(...validateContext(r.context, `${at} context`));
   if (typeof r.message_id !== 'string' || !ID.test(r.message_id))
     e.push(`${at}: message_id must look like m0001`);
   if (!oneOf(r.version, LABEL_VERSIONS)) e.push(`${at}: version must be v1, v2 or llm`);

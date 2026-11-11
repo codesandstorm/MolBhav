@@ -18,15 +18,19 @@ Draft v0.2. Tags: [EVIDENCE: path] · [HYPOTHESIS] · [GAP]. External facts need
 ## 2. Gold-set plan for one author
 **Principle:** every message is **self-authored by the developer, flagged `source: self_authored`, and never presented as a real client message.** Public datasets are training-only and never enter the test split [EVIDENCE: docs/dataset-audit/AUDIT_REPORT.md].
 
+**Disclosure.** The prompt cards, the guideline examples and the rule baseline were drafted with AI assistance; the gold messages themselves are written and labelled by the author. The same sentence is in the eval report and its generator [EVIDENCE: ml/gold/eval/EVAL_REPORT.md; packages/gold/src/split.ts `reportStub`].
+
+**Objection types.** Objection types are scored for the rules only, labelled ESTIMATE, and reported as "too few to score" unless the test split has ≥ 10 items per type. At 300 messages each type is expected to get about 4–8 test items, so every type is expected to be reported as "too few to score" [EVIDENCE: ml/gold/cards/COVERAGE.md].
+
 | Step | Protocol | Output |
 |---|---|---|
 | 1 Guidelines | write labelling guidelines for the move labels (7, or 6 + rules per D11), 6 objection types and the amount/currency/unit fields, with 2 examples per label and tie-break rules | `ml/gold/GUIDELINES.md` (v-numbered) |
 | 2 Prompt cards | a seeded script (seed 42) generates cards: scenario × intended move × objection × language (English / Roman Hinglish) × amount format (₹45,000 / 45k / 45 hazaar (also hajar, hazar) / 1.5L / per hour / none) | cards file; the coverage grid is visible |
 | 3 Writing | write one message per card in your own words, including deliberately ambiguous ones (≈15%). Target ≈300 messages (§2.3) [HYPOTHESIS: size; revisit after the first 60]; cards stratified so every learned class has ≥10 test items | messages JSONL with `source: self_authored`, `card_id` |
-| 4 Blind label pass 1 | label in shuffled order **without seeing the card**, so labels reflect the text and not the intent | labels v1 |
+| 4 Blind label pass 1 | label in shuffled order **without seeing the card**, so labels reflect the text and not the intent. The labeller sees the message and one neutral context line from the card: "Freelancer's quote so far: ₹X" or "No quote sent yet" (GUIDELINES v0.2 §0) | labels v1 (each row stores the context shown) |
 | 5 Split and freeze | stratified split (seed 42): train 60% / dev 20% / **test 20% (≈60 at 300 messages)**. Hash the test file (sha256) and record it **before any model training**. The test set is never used for training or for tuning thresholds | `test.jsonl` + hash in the eval report |
 | 6 Test-retest (**background task**) | relabel everything after a gap of ≥14 days, shuffled, blind to pass 1. It runs whenever the gap has passed and **never blocks a phase exit**; κ is added to the report when it exists | intra-rater Cohen's κ per field |
-| 7 LLM second annotator (disclosed) | one named model, version, date, temperature 0, guidelines only (no cards, no pass-1 labels), prompt stored with its hash | author–LLM Cohen's κ per field; confusion matrix |
+| 7 LLM second annotator (disclosed) | one named model, version, date, temperature 0, guidelines and the same quote context line only (no cards, no pass-1 labels), prompt stored with its hash | author–LLM Cohen's κ per field; confusion matrix |
 | 8 Adjudication | the author resolves disagreements; every change is logged with a reason; the final label = adjudicated label | adjudication log |
 | 9 Card-vs-label check | rate of label ≠ intended move | a measure of how ambiguous the writing is |
 
@@ -34,10 +38,10 @@ Draft v0.2. Tags: [EVIDENCE: path] · [HYPOTHESIS] · [GAP]. External facts need
 
 | Step | Tool | Status |
 |---|---|---|
-| 1 | `ml/gold/GUIDELINES.md` | **v0.1 DRAFT**: awaiting the owner's approval of judgement calls J1–J13 and of COMPETITOR as the sixth objection type [HYPOTHESIS] |
-| 2 | `npm run gold:cards` → `ml/gold/cards/cards.jsonl` (300 cards, seed 42) + `COVERAGE.md` | built; a test checks it is deterministic and that every learned class gets ≥ 10 expected test items |
+| 1 | `ml/gold/GUIDELINES.md` | **v0.2** (B1.1b, 2026-11-11): J1–J13 and COMPETITOR approved by the owner; J5 and J7 changed to use the visible quote; §0 lists exactly what the blind labeller sees |
+| 2 | `npm run gold:cards` → `ml/gold/cards/cards.jsonl` (300 cards, seed 42) + `COVERAGE.md` | built; a test checks it is deterministic and that every learned class gets ≥ 10 expected test items. B1.1b: each card carries its quote (`quote_rupees`, `quote_unit`); every ACCEPT card and every card that mentions the quote now has a quote sent (21 cards changed `quote_sent`; no other field moved) |
 | 3 | `npm run gold:write` (local page on 127.0.0.1:4410) → `ml/gold/data/messages.jsonl` | built, not used yet; records writing seconds per message |
-| 4, 6 | `npm run gold:label` (127.0.0.1:4411; `-- --pass v2` for the retest, offered only ≥ 14 days after v1) | built, not used yet; shows the text only, shuffled; records labelling seconds |
+| 4, 6 | `npm run gold:label` (127.0.0.1:4411; `-- --pass v2` for the retest, offered only ≥ 14 days after v1) | built, not used yet; shows the text and the one quote context line, shuffled; stores that context with each label (taken from the card, never from the page); records labelling seconds |
 | 5 | `npm run gold:split` (stratified 60/20/20, seed 42; writes the test sha256 to `ml/gold/eval/frozen.json` and `EVAL_REPORT.md`) | built, **not run**; refuses to run twice; a test fails if `test.jsonl` no longer matches the hash |
 | 7 | `npm run gold:annotate` | skeleton only: the provider is not chosen, so it fails closed before reading anything [GAP: provider decision] |
 | 2.2 metrics | `packages/gold/src/metrics.ts` (κ per field, confusion, macro-F1, accuracy, support with "too few to score", Wilson interval, bootstrap and paired bootstrap, 2,000 resamples, seed 42) | unit-tested against hand-computed values |

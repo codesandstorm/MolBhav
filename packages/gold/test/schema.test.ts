@@ -2,7 +2,13 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { CURRENCIES, MOVES, UNITS } from '@molbhav/analyser';
-import { OBJECTION_VALUES, validateJsonl, validateLabel, validateMessage } from '../src/schema.ts';
+import {
+  OBJECTION_VALUES,
+  QUOTE_UNITS,
+  validateJsonl,
+  validateLabel,
+  validateMessage,
+} from '../src/schema.ts';
 import { GOLD } from '../src/paths.ts';
 
 const fixtures = readFileSync(
@@ -20,6 +26,7 @@ const ok = {
 const label = {
   message_id: 'm0001',
   version: 'v1',
+  context: { quote_rupees: '45000', quote_unit: 'fixed' },
   move: 'PRICE_POSITION',
   objection: 'BUDGET',
   conditional: null,
@@ -97,6 +104,25 @@ describe('label schema', () => {
     ).toContain('must be null');
   });
 
+  it('stores the quote context the labeller saw: a quote, or none', () => {
+    const none = { quote_rupees: null, quote_unit: null };
+    expect(validateLabel({ ...label, context: none })).toEqual([]);
+    expect(
+      validateLabel({ ...label, context: { quote_rupees: '2000', quote_unit: 'hour' } }),
+    ).toEqual([]);
+    for (const context of [
+      undefined,
+      null,
+      { quote_rupees: 45000, quote_unit: 'fixed' },
+      { quote_rupees: '45k', quote_unit: 'fixed' },
+      { quote_rupees: '45000', quote_unit: 'day' },
+      { quote_rupees: '45000', quote_unit: null },
+      { quote_rupees: null, quote_unit: 'fixed' },
+      { quote_rupees: '45000', quote_unit: 'fixed', intended_move: 'ACCEPT' },
+    ])
+      expect(validateLabel({ ...label, context }).join()).toMatch(/context|quote/);
+  });
+
   it('the LLM annotator has no labelling time; people do', () => {
     expect(validateLabel({ ...label, version: 'llm', labelling_seconds: null })).toEqual([]);
     expect(validateLabel({ ...label, labelling_seconds: null }).join()).toContain(
@@ -110,7 +136,10 @@ describe('JSON Schema files match the validators', () => {
     JSON.parse(readFileSync(join(GOLD, 'schema', `${n}.schema.json`), 'utf8')) as {
       required: string[];
       properties: Record<string, { enum?: unknown[]; const?: unknown }>;
-      $defs?: { amount: { properties: Record<string, { enum?: unknown[] }> } };
+      $defs?: {
+        amount: { properties: Record<string, { enum?: unknown[] }> };
+        context: { properties: Record<string, { enum?: unknown[] }> };
+      };
     };
   it('enums and required fields', () => {
     const m = schema('message');
@@ -121,6 +150,7 @@ describe('JSON Schema files match the validators', () => {
     expect(l.properties.objection!.enum).toEqual([...OBJECTION_VALUES]);
     expect(l.$defs!.amount.properties.unit!.enum).toEqual([...UNITS, null]);
     expect(l.$defs!.amount.properties.currency!.enum).toEqual([...CURRENCIES, null]);
+    expect(l.$defs!.context.properties.quote_unit!.enum).toEqual([...QUOTE_UNITS, null]);
     expect(l.required).toEqual(Object.keys(label));
   });
 });

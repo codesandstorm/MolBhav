@@ -167,7 +167,7 @@ export const posterMarkup = (permille: Record<RungId, number>): string => {
     `<radialGradient id="ph" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse">${haloStops}</radialGradient>`,
   );
   out.push(
-    `<circle r="1" fill="url(#ph)" style="mix-blend-mode:plus-lighter" transform="matrix(${r3(px.x - pc.x)} ${r3(px.y - pc.y)} ${r3(py.x - pc.x)} ${r3(py.y - pc.y)} ${r1(pc.x)} ${r1(pc.y)})"/>`,
+    `<circle r="1" fill="url(#ph)" class="blend-light" transform="matrix(${r3(px.x - pc.x)} ${r3(px.y - pc.y)} ${r3(py.x - pc.x)} ${r3(py.y - pc.y)} ${r1(pc.x)} ${r1(pc.y)})"/>`,
   );
 
   ribbon(true);
@@ -182,7 +182,7 @@ export const posterMarkup = (permille: Record<RungId, number>): string => {
     const p = proj(world(m.at));
     return `<circle cx="${r1(p.x)}" cy="${r1(p.y)}" r="${r3(m.size * p.k)}" fill="url(#pm)" opacity="${r3(m.alpha)}"/>`;
   });
-  out.push(`<g style="mix-blend-mode:plus-lighter">${dots.join('')}</g>`);
+  out.push(`<g class="blend-light">${dots.join('')}</g>`);
 
   return `<defs>${defs.join('')}</defs>${out.join('')}`;
 };

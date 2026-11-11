@@ -27,7 +27,8 @@
     "gold:validate": "node packages/gold/scripts/validate.ts",
     "gold:timing": "node packages/gold/scripts/timing.ts",
     "gold:split": "node packages/gold/scripts/split.ts",
-    "gold:annotate": "node packages/gold/scripts/annotate.ts"
+    "gold:annotate": "node packages/gold/scripts/annotate.ts",
+    "shots:product": "npm run build -w apps/app && node apps/site/scripts/product-shot.ts"
   },
   "devDependencies": {
     "@axe-core/playwright": "4.14.0",

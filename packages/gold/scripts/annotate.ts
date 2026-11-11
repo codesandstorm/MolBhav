@@ -1,7 +1,8 @@
 /**
  * LLM second annotator (skeleton). DO NOT RUN: no provider is chosen, and it fails closed.
  *   MOLBHAV_LLM_PROVIDER=… MOLBHAV_LLM_MODEL=… MOLBHAV_LLM_API_KEY=… npm run gold:annotate
- * Reads only ml/gold/GUIDELINES.md and the id + text of ml/gold/data/messages.jsonl.
+ * Reads only ml/gold/GUIDELINES.md, the id + text of ml/gold/data/messages.jsonl, and from each
+ * message's card the quote fact the blind labeller also sees (GUIDELINES §0).
  * Writes ml/gold/data/labels_llm.jsonl and ml/gold/data/llm_run.json (prompt, hashes, model).
  */
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
@@ -14,7 +15,8 @@ import {
   runRecord,
   TEMPERATURE,
 } from '../src/annotator.ts';
-import { DATA, GUIDELINES, labelsFile, MESSAGES } from '../src/paths.ts';
+import { contextLine, labelContext, type Card } from '../src/cards.ts';
+import { CARDS_FILE, DATA, GUIDELINES, labelsFile, MESSAGES } from '../src/paths.ts';
 import { parseJsonl, validateLabel, type LabelRow } from '../src/schema.ts';
 
 const key = process.env.MOLBHAV_LLM_API_KEY;
@@ -26,13 +28,20 @@ try {
   if (existsSync(labelsFile('llm')))
     throw new AnnotatorError('labels_llm.jsonl exists: one run only');
   const guidelines = readFileSync(GUIDELINES, 'utf8');
-  const messages = parseJsonl<{ id: string; text: string }>(readFileSync(MESSAGES, 'utf8')).map(
-    ({ id, text }) => ({ id, text }),
+  const cards = new Map(
+    parseJsonl<Card>(readFileSync(CARDS_FILE, 'utf8')).map((c) => [c.card_id, c]),
   );
+  const messages = parseJsonl<{ id: string; text: string; card_id: string }>(
+    readFileSync(MESSAGES, 'utf8'),
+  ).map(({ id, text, card_id }) => {
+    const card = cards.get(card_id);
+    if (!card) throw new AnnotatorError(`message ${id} has no known card`);
+    return { id, text, context: labelContext(card) };
+  });
   const rows: LabelRow[] = [];
   let version = config.model;
   for (const m of messages) {
-    const p = buildPrompt(guidelines, m.text);
+    const p = buildPrompt(guidelines, m.text, contextLine(m.context));
     const out = await config.adapter.annotate(
       { system: p.system, user: p.user, model: config.model, temperature: TEMPERATURE },
       config.key,
@@ -40,11 +49,12 @@ try {
     version = out.modelVersion;
     const parsed = JSON.parse(out.text) as Omit<
       LabelRow,
-      'message_id' | 'version' | 'labelled_at' | 'labelling_seconds'
+      'message_id' | 'version' | 'context' | 'labelled_at' | 'labelling_seconds'
     >;
     const row: LabelRow = {
       message_id: m.id,
       version: 'llm',
+      context: m.context,
       ...parsed,
       labelled_at: new Date().toISOString(),
       labelling_seconds: null,

@@ -8,6 +8,7 @@
   "required": [
     "message_id",
     "version",
+    "context",
     "move",
     "objection",
     "conditional",
@@ -27,6 +28,9 @@
         "v2",
         "llm"
       ]
+    },
+    "context": {
+      "$ref": "#/$defs/context"
     },
     "move": {
       "enum": [
@@ -122,6 +126,32 @@
         }
       },
       "description": "Whole rupees as digit strings (never floats). With rupees null, rupees_high, unit and currency are null; otherwise unit and currency are set and rupees_high > rupees (checked by the validator)."
+    },
+    "context": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "quote_rupees",
+        "quote_unit"
+      ],
+      "properties": {
+        "quote_rupees": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^[1-9][0-9]{0,11}$"
+        },
+        "quote_unit": {
+          "enum": [
+            "fixed",
+            "hour",
+            "month",
+            null
+          ]
+        }
+      },
+      "description": "What the labeller was shown about the deal (GUIDELINES §0): the freelancer's quote as whole rupees and its unit, or both null for \"No quote sent yet\". Filled from the card by the tool, never typed by the labeller."
     }
   }
 }

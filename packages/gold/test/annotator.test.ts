@@ -69,10 +69,17 @@ describe('LLM second annotator (skeleton)', () => {
       'bad key [REDACTED] rejected ([REDACTED])',
     ));
 
-  it('the prompt carries only the guidelines and the message text, and its hash is recorded', () => {
-    const p = buildPrompt('GUIDELINES TEXT', '[FIXTURE, not gold] can you do 30k?');
+  it('the prompt carries only the guidelines, the quote context line and the message text, and its hash is recorded', () => {
+    const p = buildPrompt(
+      'GUIDELINES TEXT',
+      '[FIXTURE, not gold] can you do 30k?',
+      "Freelancer's quote so far: ₹45,000",
+    );
     expect(p.system).toContain('GUIDELINES TEXT');
-    expect(p.user).toBe('Message:\n[FIXTURE, not gold] can you do 30k?');
+    expect(p.user).toBe(
+      "Context: Freelancer's quote so far: ₹45,000\nMessage:\n[FIXTURE, not gold] can you do 30k?",
+    );
+    expect(buildPrompt('G', 'x').user).toBe('Message:\nx');
     for (const leak of ['card', 'intended', 'pass-1', 'v1'])
       expect(p.system.toLowerCase() + p.user.toLowerCase()).not.toContain(leak);
     expect(p.templateSha256).toBe(sha256(PROMPT_TEMPLATE));

@@ -63,3 +63,16 @@ Phase A2.1 session total: ~1.0 h [CALCULATION: 04:45–04:53 and 10:04–11:00, 
 | 2026-11-11 | Step 6: docs 02, 04, 08, 09, README, this log; final checks | ~0.1 (11:59–12:06) | — | lint, format, typecheck clean; unit 439 passed + 1 skipped (app 20, site 43, analyser 197, engine 64, gold 57+1 skipped, tokens 58); hand-verified 14; build ok (worker 27.1 kB, 10.9 kB gzip); e2e app 7/7, site 23/23; CI not run |
 
 Phase B1.1 session total: ~1.0 h [CALCULATION: 11:05 → 12:06]. Planned for B1 (S4a 25 h blocking + S4b 9 h): 34 h [EVIDENCE: docs/product/02_service_catalogue.md]; the 25 h of S4a are mostly the owner writing and labelling, which has not started.
+
+### Phase B1.1b · guideline fix, quote context, reader and product-shot checks, deploy prep (branch `phase-b1-reader`)
+Times are from file modification times on this machine. There was a pause of about 2.5 h between 12:38 and 15:05 (no work happening); it is not counted.
+
+| Date | Part | Actual (session) h | Actual (Sandarbh) h | Status / notes |
+|---|---|---|---|---|
+| 2026-11-11 | `ml/gold/GUIDELINES.md` v0.2: owner's decisions applied | ~0.02 (12:20–12:21) | — | done; J1–J4, J6, J8–J13 and COMPETITOR APPROVED 2026-11-11; J5 and J7 changed to use the visible quote; §0 lists what the blind labeller sees; rules relying on unseen information removed |
+| 2026-11-11 | Quote context: cards, tools, schema, validator, annotator, quote-aware rules | ~0.17 (12:21–12:31) | — | done; cards gain `quote_rupees`/`quote_unit` (no RNG change); 21 cards changed `quote_sent` (all ACCEPT cards and every quote-reference card now have a quote sent); labels store the context shown; rules 0.2: bare "ok" with no quote → OTHER, a number with only weak movement words and no quote → PRICE_POSITION |
+| 2026-11-11 | Reader review at 360/768/1280, fixes, screenshots | ~0.08 (12:31–12:36) | — | done; fixed a 3 px horizontal overflow at 360 px and two spacing issues (CSS only); touch targets ≥ 44 px; `app-reader-{360,768,1280}.jpg` 89/101/116 KB |
+| 2026-11-11 | Product shot from the current app; `npm run shots:product`; manifest check | ~0.03 (12:36–12:38) | — | done; 41.2 KB WebP; the site unit test fails when the ladder screen's source changes without a new shot |
+| 2026-11-11 | Disclosure sentence (eval report, its generator, 04) and the objection-scoring note | ~0.02 (12:37–12:38, test 15:05) | — | done; a test checks the generated report carries it verbatim |
+| 2026-11-11 | Cloudflare Pages prep: `_headers` ×2, `scripts/pages-serve.ts`, CSP e2e ×2, `16_deploy.md` | ~0.08 (15:05–15:10) | — | done; no `'unsafe-inline'`/`'unsafe-eval'`; the site needs 3 sha256 hashes for Astro's inline blocks; the poster's style attributes became a class; nothing deployed |
+| 2026-11-11 | Docs 02, 04, 09, README, this log; final checks | (see the B1.1b report) | — | 08 not changed: no product copy changed |

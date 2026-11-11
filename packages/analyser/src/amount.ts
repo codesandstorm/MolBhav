@@ -1,5 +1,5 @@
 /**
- * Amount parser for client messages (S4b), written from ml/gold/GUIDELINES.md v0.1 §4 and the
+ * Amount parser for client messages (S4b), written from ml/gold/GUIDELINES.md v0.2 §4 and the
  * card generator's formats only, before any gold message exists.
  *
  * Reads ₹ / Rs / INR / rupees, 45,000 and 4,50,000, 45k, 1.5L / 1.5 lakh, hazaar / hajar / hazar,
