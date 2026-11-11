@@ -17,10 +17,17 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # the guard reads every commit in the PR or push range
       - uses: actions/setup-node@v4
         with:
           node-version-file: .nvmrc
           cache: npm
+      - name: Repository guard (commit messages, tracked paths, file sizes)
+        run: node scripts/guard-git.mjs ci --range "$BASE..$HEAD"
+        env:
+          BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
+          HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
       - run: npm ci
       - run: npm run lint
       - run: npm run format:check
