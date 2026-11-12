@@ -67,10 +67,19 @@ export function Reader({
   state,
   set,
   onBack,
+  hasLadder = false,
+  onOptions,
+  onSetup,
+  onExample,
 }: {
   state: ReaderState;
   set: (patch: Partial<ReaderState>) => void;
   onBack: () => void;
+  /** S5 needs a ladder: without one the reader offers to set up a deal first */
+  hasLadder?: boolean;
+  onOptions?: () => void;
+  onSetup?: () => void;
+  onExample?: () => void;
 }) {
   const heading = useRef<HTMLHeadingElement>(null);
   const result = useRef<HTMLHeadingElement>(null);
@@ -385,6 +394,24 @@ export function Reader({
             </Disclosure>
           )}
           <p className="note">{t.notScored}</p>
+        </Glass>
+      )}
+
+      {showResults && onOptions && (
+        <Glass className="reader-entry options-entry">
+          {hasLadder ? (
+            <Button variant="primary" onClick={onOptions}>
+              {copy.options.entry}
+            </Button>
+          ) : (
+            <>
+              <p>{copy.options.needLadder}</p>
+              <div className="actions">
+                <Button onClick={onSetup}>{copy.options.needLadderStart}</Button>
+                <Button onClick={onExample}>{copy.options.needLadderExample}</Button>
+              </div>
+            </>
+          )}
         </Glass>
       )}
     </section>

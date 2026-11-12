@@ -1,4 +1,4 @@
-import { expect, test, type Request } from '@playwright/test';
+import { expect, test, type Page, type Request } from '@playwright/test';
 
 /**
  * S13 privacy test: no request body (or URL) ever contains entered deal text.
@@ -145,4 +145,83 @@ test('delete everything removes the stored deal', async ({ page }) => {
   expect(dbs).not.toContain('molbhav');
   await page.reload();
   await expect(page.getByRole('button', { name: 'Example deal (made up)' })).toHaveCount(0);
+});
+
+/** every stored deal, as JSON (bigints written as "123n") */
+const storedDeals = (page: Page) =>
+  page.evaluate(
+    () =>
+      new Promise<string>((resolve) => {
+        const open = indexedDB.open('molbhav');
+        open.onsuccess = () => {
+          const all = open.result.transaction('deals').objectStore('deals').getAll();
+          all.onsuccess = () => {
+            const json = JSON.stringify(all.result, (_, v) =>
+              typeof v === 'bigint' ? `${v}n` : v,
+            );
+            open.result.close(); // an open connection would block "delete everything"
+            resolve(json);
+          };
+        };
+      }),
+  );
+
+/**
+ * S5/S6: options and drafts are worked out on the device. Neither the client's message nor the
+ * draft the user writes appears in any request, and the stored deal holds the draft but never
+ * the client's message. Made-up probes, not gold.
+ */
+test('options and drafts never leave the device; the client message is never stored', async ({
+  page,
+  context,
+  baseURL,
+}) => {
+  const seen: Request[] = [];
+  context.on('request', (r) => seen.push(r));
+  const DRAFT = 'ZQXDRAFT my price stays at ₹45,000';
+  const needles = ['ZQXREADER', 'ZQXDRAFT', '47,613', '47613', '9811122233', 'bahut zyada'];
+
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Read a client’s reply' }).click();
+  await page.getByLabel('Paste what your client said').fill(MESSAGE);
+  await page.getByRole('button', { name: 'Read it' }).click();
+  await page.getByRole('button', { name: 'Use the example deal' }).click();
+  await expect(page.getByRole('heading', { name: 'Your options' })).toBeVisible();
+  // the first enabled one: a scope card's button waits for the smaller effort
+  await page.getByRole('button', { name: 'Draft this reply', disabled: false }).first().click();
+  await expect(page.getByRole('heading', { name: 'Draft your reply' })).toBeVisible();
+  await expect(
+    page.getByText('Nothing is sent anywhere; you send it yourself.').first(),
+  ).toBeVisible();
+  await page.getByLabel('Your draft').fill(DRAFT);
+  await page.getByRole('radio', { name: 'Firm' }).check({ force: true });
+  await page.getByRole('button', { name: 'Copy the draft' }).click();
+
+  // what is stored: the draft, with the deal; never the client's message
+  await expect.poll(() => storedDeals(page)).toContain('ZQXDRAFT');
+  const stored = await storedDeals(page);
+  for (const n of ['ZQXREADER', 'bahut zyada', '9811122233', '47,613', '47613'])
+    expect(stored.includes(n), `storage contains ${n}`).toBe(false);
+
+  // delete everything clears the draft too
+  await page.getByRole('button', { name: 'Settings and privacy' }).click();
+  await page.getByRole('button', { name: 'Delete everything on this device' }).click();
+  await page.getByRole('button', { name: 'Yes, delete everything' }).click();
+  await expect(page.getByText('Everything on this device was deleted.')).toBeVisible();
+  const dbs = await page.evaluate(async () => (await indexedDB.databases()).map((d) => d.name));
+  expect(dbs).not.toContain('molbhav');
+  await page.waitForLoadState('networkidle');
+
+  expect(seen.length).toBeGreaterThan(0);
+  const origin = new URL(baseURL!).origin;
+  for (const r of seen) {
+    expect(r.method(), r.url()).toBe('GET');
+    expect(new URL(r.url()).origin, r.url()).toBe(origin);
+    const body = r.postData() ?? '';
+    const url = decodeURIComponent(r.url());
+    for (const n of needles) {
+      expect(body.includes(n), `body of ${r.url()} contains ${n}`).toBe(false);
+      expect(url.includes(n), `URL ${r.url()} contains ${n}`).toBe(false);
+    }
+  }
 });

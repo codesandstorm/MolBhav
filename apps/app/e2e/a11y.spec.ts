@@ -195,3 +195,75 @@ test('axe: the reader (S4b) in each of its states', async ({ page }) => {
   // the last state (no move found, the picker open) in every pointer and focus state
   expect(await seriousInEveryState(page)).toEqual([]);
 });
+
+/** S5/S6: reach the options from the reader with the example deal (a made-up message, not gold) */
+const toOptions = async (page: Page, text = 'Too high. Can you do 40k?') => {
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Read a client’s reply' }).click();
+  await page.getByLabel('Paste what your client said').fill(text);
+  await page.getByRole('button', { name: 'Read it' }).click();
+  await page.getByRole('button', { name: 'Use the example deal' }).click();
+  await expect(page.getByRole('heading', { name: 'Your options' })).toBeVisible();
+};
+
+test('axe: options (S5) and the draft (S6) in each of their states', async ({ page }) => {
+  test.setTimeout(240_000);
+  await toOptions(page);
+  expect(await seriousInEveryState(page)).toEqual([]);
+  // the scope card: an effort error, then a priced smaller job
+  const effort = page.getByLabel('How many days would the smaller job take?');
+  await effort.fill('99');
+  await expect(page.getByText('Make it smaller than the full job')).toBeVisible();
+  expect(await serious(page)).toEqual([]);
+  await effort.fill('5');
+  await expect(page.getByText('Price for the smaller job', { exact: true })).toBeVisible();
+  expect(await serious(page)).toEqual([]);
+
+  await page.getByRole('button', { name: 'Draft this reply' }).first().click();
+  await expect(page.getByRole('heading', { name: 'Draft your reply' })).toBeVisible();
+  expect(await seriousInEveryState(page)).toEqual([]);
+  // a failed check, an edited draft with the rebuild offer, Hinglish
+  await page.getByLabel('Your draft').fill('Or maybe 42k, plus GST.');
+  await expect(page.locator('.draft-fail')).toBeVisible();
+  await page.getByRole('radio', { name: 'Firm' }).check({ force: true });
+  const rebuild = page.getByRole('button', { name: 'Rebuild the draft with these choices' });
+  await expect(rebuild).toBeVisible();
+  expect(await serious(page)).toEqual([]);
+  await rebuild.click();
+  await page.getByRole('radio', { name: 'Hinglish (Roman script)' }).check({ force: true });
+  expect(await serious(page)).toEqual([]);
+
+  // low confidence, no amount: the notes
+  await toOptions(page, 'asdf qwer');
+  expect(await serious(page)).toEqual([]);
+});
+
+test('keyboard only: reader → options → draft → copy', async ({ page, context }) => {
+  await context.grantPermissions(['clipboard-read', 'clipboard-write']);
+  await page.goto('/');
+  await tabTo(page, 'Read a client’s reply');
+  await page.keyboard.press('Enter');
+  await tabTo(page, 'Paste what your client said');
+  await page.keyboard.type('Can you do 30k?'); // made-up, not gold
+  await tabTo(page, 'Read it');
+  await page.keyboard.press('Enter');
+  await expect(page.getByRole('heading', { name: 'What the rules read' })).toBeFocused();
+  await tabTo(page, 'Use the example deal');
+  await page.keyboard.press('Enter');
+  await expect(page.getByRole('heading', { name: 'Your options' })).toBeFocused();
+  await tabTo(page, 'Draft this reply');
+  await page.keyboard.press('Enter');
+  await expect(page.getByRole('heading', { name: 'Draft your reply' })).toBeFocused();
+  // Tab stops once per radio group, on the checked radio; the arrow keys move within the group
+  await tabTo(page, 'Polite');
+  await page.keyboard.press('ArrowRight');
+  await expect(page.getByRole('radio', { name: 'Firm' })).toBeFocused();
+  await expect(page.getByRole('radio', { name: 'Firm' })).toBeChecked();
+  await tabTo(page, 'Your draft');
+  await page.keyboard.press('End');
+  await page.keyboard.type(' Thanks.');
+  await expect(page.getByText('All numbers in this draft come from your ladder')).toBeVisible();
+  await tabTo(page, 'Copy the draft');
+  await page.keyboard.press('Enter');
+  await expect(page.getByRole('status').filter({ hasText: 'Copied' })).toBeVisible();
+});
