@@ -5,6 +5,7 @@ import { Labelled } from '../components/Labelled.tsx';
 import { Rung } from '../components/Rung.tsx';
 import { place, spread } from '../quote-track.ts';
 import { Button, Disclosure, Glass } from '../components/ui.tsx';
+import { OPTION_COPY, type OptionKind } from '@molbhav/planner';
 
 const per = (r: LadderOk) => (r.unit === 'hour' ? '/hour' : r.unit === 'month' ? '/month' : '');
 
@@ -67,12 +68,17 @@ export function Ladder({
   onEdit,
   onEvidence,
   onReader,
+  saved,
+  onSaved,
 }: {
   result: LadderOk;
   isExample: boolean;
   onEdit: () => void;
   onEvidence: () => void;
   onReader: () => void;
+  /** the option kind of the reply saved with this deal (null: their own reply); undefined: none */
+  saved?: OptionKind | null | undefined;
+  onSaved?: () => void;
 }) {
   const h = useRef<HTMLHeadingElement>(null);
   useEffect(() => h.current?.focus(), []);
@@ -143,6 +149,15 @@ export function Ladder({
           <p>{copy.reader.entry}</p>
           <Button onClick={onReader}>{copy.reader.entryButton}</Button>
         </Glass>
+        {saved !== undefined && onSaved && (
+          <Glass className="reader-entry saved-draft">
+            <p>
+              <strong>{copy.draft.saved}:</strong>{' '}
+              {saved === null ? copy.draft.own : OPTION_COPY[saved].name}
+            </p>
+            <Button onClick={onSaved}>{copy.draft.savedOpen}</Button>
+          </Glass>
+        )}
       </div>
     </section>
   );

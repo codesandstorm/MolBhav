@@ -310,6 +310,8 @@ h2:focus-visible,
 .input-row {
   display: flex;
   align-items: center;
+  /* a grid item: without this, a select's longest option widens the field past its card */
+  min-width: 0;
   gap: var(--mb-space-2);
   min-height: 48px;
   margin-top: var(--mb-space-1);
@@ -976,6 +978,143 @@ details[open] > summary .disclosure-icon {
   }
 }
 
+/* ── Options (S5) and draft (S6) ────────────────────────────────────── */
+.options,
+.draft {
+  grid-template-columns: minmax(0, 1fr);
+}
+.options-context,
+.draft-choices,
+.draft-box {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--mb-space-4);
+}
+.draft .choice,
+.options .choice {
+  min-inline-size: 0;
+}
+.option-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--mb-space-4);
+}
+.option-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-content: start;
+  gap: var(--mb-space-3);
+}
+.option-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--mb-space-2) var(--mb-space-3);
+}
+.option-head h3 {
+  margin: 0;
+  font-size: var(--mb-text-lg);
+}
+.option-rank {
+  padding: 0 var(--mb-space-3);
+  border-radius: var(--mb-radius-pill);
+  border: 1px solid var(--mb-color-accent-deep);
+  color: var(--mb-color-accent);
+  font-size: var(--mb-text-sm);
+}
+.option-meaning,
+.option-why,
+.option-risk,
+.option-asks {
+  margin: 0;
+}
+.option-risk {
+  color: var(--mb-color-text-muted);
+}
+.option-figures {
+  margin: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--mb-space-2);
+}
+.option-figure {
+  display: grid;
+  gap: var(--mb-space-1);
+}
+.option-figure dt {
+  font-size: var(--mb-text-sm);
+  color: var(--mb-color-text-muted);
+}
+.option-figure dd {
+  margin: 0;
+  font-size: var(--mb-text-lg);
+}
+.option-extra {
+  font-size: var(--mb-text-sm);
+  color: var(--mb-color-text-muted);
+}
+.option-scope .field {
+  max-width: 22rem;
+}
+.options-notes {
+  margin: 0;
+  padding: var(--mb-space-3) var(--mb-space-4) var(--mb-space-3) var(--mb-space-6);
+  border-radius: var(--mb-radius-md);
+  background: var(--mb-color-warning-bg);
+  color: var(--mb-color-warning-text);
+  display: grid;
+  gap: var(--mb-space-2);
+}
+.draft-stale {
+  display: grid;
+  gap: var(--mb-space-3);
+  justify-items: start;
+}
+.draft-check {
+  display: grid;
+  gap: var(--mb-space-2);
+}
+.draft-ok {
+  margin: 0;
+  font-weight: var(--mb-weight-strong);
+}
+.check-mark {
+  display: inline-block;
+  width: 0.5em;
+  height: 0.9em;
+  margin-inline-end: var(--mb-space-2);
+  border: solid var(--mb-color-accent);
+  border-width: 0 0.15em 0.15em 0;
+  transform: rotate(45deg) translateY(-0.1em);
+}
+.draft-fail {
+  padding: var(--mb-space-3) var(--mb-space-4);
+  border-radius: var(--mb-radius-md);
+  border: 1px solid var(--mb-color-danger);
+  color: var(--mb-color-text);
+}
+.draft-fail p {
+  margin: 0 0 var(--mb-space-2);
+  color: var(--mb-color-danger);
+  font-weight: var(--mb-weight-strong);
+}
+.draft-fail ul {
+  margin: 0;
+  padding-left: var(--mb-space-5);
+  display: grid;
+  gap: var(--mb-space-1);
+}
+.draft-fail q {
+  font-weight: var(--mb-weight-strong);
+}
+.draft-box .privacy-note {
+  margin: 0;
+  padding: 0;
+}
+
 /* ── Tablet and desktop ─────────────────────────────────────────────── */
 @media (min-width: 48rem) {
   .topbar {
@@ -1025,6 +1164,24 @@ details[open] > summary .disclosure-icon {
   }
   .main[data-screen='evidence'] {
     max-width: 58rem;
+  }
+  .main[data-screen='options'],
+  .main[data-screen='draft'] {
+    max-width: 68rem;
+  }
+  .option-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .options-context .option-figures {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+  .draft {
+    grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+    column-gap: var(--mb-space-6);
+    align-items: start;
+  }
+  .draft > .screen-head {
+    grid-column: 1 / -1;
   }
 }
 

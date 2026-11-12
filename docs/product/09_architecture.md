@@ -22,7 +22,8 @@ Fixed inputs: D8 = comfortable with React, Three.js and GSAP, wants the best pro
 ```
 apps/site        Astro, static; one React island: R3F scene loaded after the first interaction; build-time poster; own scroll module
 apps/app         Vite + React + TypeScript PWA; IndexedDB; never imports three, @react-three/* or gsap (lint rule)
-packages/engine  pure TS: price ladder, planner, debrief, number post-check (no I/O)
+packages/engine  pure TS: price ladder, debrief (no I/O)
+packages/planner pure TS: reply options (doc 18 table), template packs, number post-check (no I/O; built in C1)
 packages/analyser pure TS: amount parser + rule baseline, runs in a Web Worker
 packages/tokens  colours, type, spacing (shared by site and app)
 workers/draft    Cloudflare Worker: POST /v1/draft (LLM proxy, key server-side)
@@ -36,10 +37,10 @@ The showcase scenes import `packages/engine` so every number on the site is a re
 | Decision | Kind | Where it runs | Why |
 |---|---|---|---|
 | Floor / target / opening, concessions, debrief | deterministic | `packages/engine`, on the device | numbers must be exact and traceable [EVIDENCE: 02_service_catalogue.md S2, S8] |
-| Reply options | deterministic strategy table | `packages/engine`, on the device | [EVIDENCE: 02_service_catalogue.md S5] |
+| Reply options | deterministic strategy table (18_planner_rules.md) | `packages/planner`, on the device | [EVIDENCE: 02_service_catalogue.md S5] |
 | Amount, move, objection | rules (B1); on-device learned model (TF-IDF + LR, JSON weights) only if it wins (B2) | `packages/analyser` in a Web Worker on the device; server only under D10(b) after legal review | [EVIDENCE: 07_trust_safety_compliance.md §4] |
 | Wording of a draft | LLM, optional | `workers/draft` → provider | the only LLM use (D3) |
-| Number post-check | deterministic | engine, on the device **and** in the Worker | defence in depth |
+| Number post-check | deterministic | `packages/planner` `checkDraft`, on the device (C1); also in the Worker when C2 is built | defence in depth |
 
 ## 4. API contracts
 All local calls are typed functions; the only network API in V1 is `/v1/draft`.
@@ -48,8 +49,6 @@ All local calls are typed functions; the only network API in V1 is `/v1/draft`.
 computeLadder(i: { quoted: Money; unit: 'fixed'|'hour'|'month'; days: number;
   monthlyNeed: Money; costs?: Money; bufferPct?: number })
   -> { floor: Money; target: Money; opening: Money; trace: TraceStep[]; label: 'CALCULATION' }
-planReplies(deal: Deal, ladder: Ladder, a: Analysis) -> Option[]   // each: id, kind, reason, numbers, isConditional
-checkNumbers(text: string, allowed: Money[]) -> { ok: boolean; offending: string[] }
 debrief(deal: Deal) -> { totalConceded: Money; conditional: Money; unconditional: Money; lesson: RuleId }
 
 // packages/analyser (Web Worker message; as built in B1.1, 2026-11-11)
@@ -65,8 +64,28 @@ analyse(text: string, state: { quoteSent: boolean | null }) -> {
   source: 'rules'; version: string }
 ```
 Money in the analyser is **bigint rupees**, never a float (the engine's no-float lint covers `amount.ts`); an amount it cannot settle exactly comes back `ambiguous` instead of guessed [EVIDENCE: packages/analyser/src/amount.ts]. The analyser never returns a floor, target or opening. The main thread imports only `@molbhav/analyser/client` (types only) and `/labels`, so the rules load in the Worker alone [EVIDENCE: packages/analyser/test/worker.test.ts]. The built worker is 27,123 bytes before compression, inside the ≤ 50 KB target [EVIDENCE: apps/app/dist/assets/analyser.worker-*.js, B1.1 build].
+```ts
+// packages/planner (as built in C1, 2026-11-11). All money is bigint rupees.
+planReplies(i: PlanInput) -> Plan
+  // PlanInput = { ladder: {unit, step, floor, target, opening, concessionRoomPct, inputs},
+  //               deal: {quoteSent, currentQuote}, client: {move, objection, amount, amountUnit,
+  //               amountCurrency, source: 'analyser'|'manual', confidence},
+  //               prefs: {condition, advancePct: 25n|50n, reducedEffort} }
+  // Plan.options[]: {id, kind, family a–f, rank, rule, reason, risk, conditional,
+  //                  unconditionalConcession, figures, allowed: AllowedPrice[] (never the floor)}
+draftRequest(o: PlanOption, ctx: {move, objection, lang, tone, unit}, advancePct) -> DraftRequest
+  // { kind, move, objection, lang, tone, condition, unit, numbers: {slot: bigint} }
+  // no field admits free text: FreeTextKeys<DraftRequest> = never (a type test)
+isDraftRequest(x: unknown) -> boolean      // exact keys, enum values, bigint numbers only
+fillTemplate(r: DraftRequest) -> { ok: true, templateId, text, allowed, check, needsEdit }
+                              | { ok: false, error: 'invalid_request'|'missing_number'|'check_failed' }
+checkDraft(text: string, allowed: AllowedNumbers) -> { ok, found: Found[], offending: Found[] }
+  // fails closed: any number, number word, range, hedge, other currency or unit, other script,
+  // hidden character or tax/legal term not exactly in `allowed` → ok: false, with a reason
+```
+The client's message never reaches the planner: `planInputFrom` builds `PlanInput` from the reader's confirmed fields only, and S6 receives only a `DraftRequest` [EVIDENCE: packages/planner/test/draft.test.ts; apps/app/test/options.test.tsx]. **Extension point (not built):** a future `/v1/draft` client would take the same `DraftRequest`, and its text would pass `checkDraft` against `allowedFor(request)` before it is shown; a failure shows the template. There is no toggle for it in C1 (apps/app/src/screens/Draft.tsx comment).
 ```http
-POST /v1/draft            (only when the user has turned drafting on)
+POST /v1/draft            (C2, not built; only when the user has turned drafting on)
 Content-Type: application/json   (max 2 KB)
 { "optionKind": "HOLD|TRADE|WALK", "deliverable": "website|app|ui_design|other",
   "numbers": { "price": 42000, "advancePct": 50 }, "lang": "en|hinglish" }
@@ -78,9 +97,9 @@ Rules [HYPOTHESIS: design]: the schema has **no free-text field**, so client nam
 ## 5. Data flow
 ```
 [paste] -> Web Worker analyse() -> Analysis ──┐
-[deal form] -> computeLadder() -> Ladder ─────┼-> planReplies() -> Option -> template text
-                                              │                       └-(opt-in)-> /v1/draft -> checkNumbers() -> draft
-IndexedDB: Deal, Ladder, Moves, Outcome  <────┘   (never leaves the device by default)
+[deal form] -> computeLadder() -> Ladder ─────┼-> planReplies() -> Option -> DraftRequest -> fillTemplate() -> checkDraft() -> draft
+                                              │                       └-(opt-in, C2, not built)-> /v1/draft -> checkDraft() -> draft
+IndexedDB: Deal, Ladder, saved reply draft, Moves, Outcome  <────┘   (never leaves the device by default)
 Opt-in counts: { ladders: 3, analyses: 2, ... } -> /v1/counts [GAP: endpoint not designed; V1·D]
 ```
 **On-device analysis (D10).** The rule baseline + parser are plain TypeScript in a Web Worker: normalise (lowercase, common Roman-Hindi spelling variants such as "kam/kum"), parse amounts (₹, rs, inr, k, L, lakh, lac, cr, and the thousand words hazaar/hajar/hazar: "30 hazaar" → ₹30,000, "1.5 hazaar" → ₹1,500), score each class by weighted patterns, confidence = margin between the top two scores; the threshold is tuned on the dev split only [EVIDENCE: 04_research_integrity.md §2]. Target bundle ≤ 50 KB [HYPOTHESIS]. **B2 learned model (2026-11-11):** the Worker also loads a JSON file with the vocabulary, idf values and logistic-regression weights (≤ 4,000 features, target ≤ 250 KB) and reproduces the Python vectoriser exactly (same lowercasing, tokeniser regex, char n-gram padding, sublinear tf, l2 norm); a parity test checks TS vs Python probabilities on the dev split to within 1e-6 [HYPOTHESIS: caps and tolerance]. hing-bert is evaluated in Python only, as a research comparison. The fine-tuned model is ~110M parameters [EVIDENCE: docs/dataset-audit/cards/hingbert_models.md], about 110 MB at 8-bit [CALCULATION: 1 byte per parameter], too large for the low-end budget, so in-browser inference (option c) would need distillation [GAP].
@@ -116,7 +135,7 @@ Cost today: **₹0** for hosting [CALCULATION: all chosen tiers are free]; the L
 |---|---|---|
 | Engine | Vitest + fast-check | ≥10 hand-worked ladders exact; floor ≤ target ≤ opening; monotonic in costs; no option below floor without USER DECISION [EVIDENCE: 04_research_integrity.md §3 A2] |
 | Parser | Vitest table tests | every INR format incl. hazaar/hajar/hazar; ≥95% exact on the frozen test (A4) |
-| Post-check | Vitest adversarial set | 0 invented numbers pass (A5), including numerals with k/L/lakh/cr suffixes and number words: "30 hazaar"/"hajar"/"hazar", "tees hazaar", "thirty thousand"; any number word not mapped to an engine value fails the draft |
+| Post-check | Vitest adversarial set [EVIDENCE: C1 built: 404 cases, 0 invented numbers passed, 54/54 controls; packages/planner/test/adversarial.test.ts] | 0 invented numbers pass (A5), including numerals with k/L/lakh/cr suffixes and number words: "30 hazaar"/"hajar"/"hazar", "tees hazaar", "thirty thousand"; any number word not mapped to an engine value fails the draft |
 | Privacy | Playwright with request interception | **no request body contains the pasted text**, in every flow, with all toggles off |
 | `/v1/draft` | schema tests | free text and unknown fields rejected |
 | Accessibility | axe-core + keyboard run | no serious violations; golden path by keyboard |

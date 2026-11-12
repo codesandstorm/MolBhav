@@ -37,8 +37,8 @@ Costs, buffer and timeline are asked later, with defaults shown as USER DECISION
 | 3 | Deal setup | S1 | 4 required fields, "add more detail" |
 | 4 | Price ladder | S2, S3, S7 | 3 rungs, trace expanders, optional benchmark (ESTIMATE, n) |
 | 5 | Client reply | S4b | paste box, on-device line, result chips, manual picker |
-| 6 | Reply options | S5 | 2–3 option cards with reason and numbers |
-| 7 | Draft | S6 | editable text, "copy", template/AI badge |
+| 6 | Reply options | S5 | 2–3 option cards with reason and numbers. **Built in C1** as "Your options": 2–4 cards, each with figures (CALCULATION), "Asks back", "Why" (RECOMMENDATION) and "Risk"; context row with their move and number (ESTIMATE or USER DECISION), your price and your floor "for you only, never put in a draft" [EVIDENCE: apps/app/src/screens/Options.tsx] |
+| 7 | Draft | S6 | editable text, "copy", template/AI badge. **Built in C1** as "Draft your reply": language, tone and (for a trade) the return and advance share; an editable draft re-checked on every edit; copy; templates only, so no badge yet [EVIDENCE: apps/app/src/screens/Draft.tsx] |
 | 8 | Evidence panel | S7 | side sheet: every claim with label + source |
 | 9 | Log outcome | S8 | final price, what you got in return |
 | 10 | Debrief | S8 | concessions: conditional vs unconditional, one lesson |
@@ -54,6 +54,7 @@ Costs, buffer and timeline are asked later, with defaults shown as USER DECISION
 | Client reply | paste box with example placeholder | "Reading on this device…" (< 1 s target [HYPOTHESIS]) | "Couldn't find an amount. Type it:" | "Not sure what they mean. Pick one:" + 3 chips + "something else" |
 | Reply options | "Tell us what they said to see options" | n/a | generic options + reason | options shown with "based on your pick" |
 | Draft | template shown instantly | "Writing a draft…" with "use the template" button | "AI draft unavailable. Here's the template." | n/a |
+| Draft (as built, C1) | "Write a reply to check its numbers." | none: templates are instant | the check failed: "Check these before you send: they are not numbers from your ladder or this option" + each item with its reason | n/a (the options screen carries the low-confidence note) |
 | Debrief | "Log how it ended to see your debrief" | n/a | n/a | n/a |
 
 ## 5. Trust cues
@@ -94,8 +95,10 @@ Target WCAG 2.2 AA [HYPOTHESIS: standard chosen, not audited]. Rules: full keybo
 | Reply (S4b) | amount | "Amount they mention" (ESTIMATE until edited, then USER DECISION) · none found: "Couldn’t find an amount. Type it:" · unclear: e.g. "two different prices: check which one they mean" [HYPOTHESIS] |
 | Reply (S4b) | footer | "These rules have not been scored on a test set yet." [HYPOTHESIS] |
 | Options | titles | "Hold the price, add something small" · "Trade: lower price if 50% advance" · "Walk away politely" |
+| Options (as built, C1) | screen and cards | "Your options" · "Ways to answer, worked out from your ladder. Each says what it does and its risk. You choose." · option names such as "Hold your price", "Trade: a smaller step, for something back", "Come down a step"; "Why", "Risk", "Asks back"; "None of these? Write your own reply". Full list with ids: [17_c1_review_checklist.md](17_c1_review_checklist.md) [HYPOTHESIS] |
 | Options | floor guard | "This is below your floor of ₹38,000. Go ahead anyway?" (USER DECISION) |
 | Draft | badges | "Template" · "AI draft · numbers checked" |
+| Draft (as built, C1) | screen | "Draft your reply" · "Nothing is sent anywhere; you send it yourself." · check passed (only then): "All numbers in this draft come from your ladder" (CALCULATION) · "Copy the draft" · parts marked "[your edit: …]" to fill in. Full list with ids: 17 [HYPOTHESIS] |
 | Debrief | summary | "You gave ₹5,000 in total: ₹3,000 in exchange for an advance, ₹2,000 for nothing." |
 | Debrief | lesson | "Next time, ask for something back before lowering the price." |
 | Settings | delete | "Delete everything on this device" → "This can't be undone." |

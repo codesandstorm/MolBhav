@@ -5,6 +5,7 @@
  *   npm run build -w apps/site && npm run preview -w apps/site
  *   node apps/site/scripts/screens.ts
  *   node apps/site/scripts/screens.ts --only app-reader   (only the reader shots; app preview only)
+ *   node apps/site/scripts/screens.ts --only app-reply    (options and draft shots; app preview only)
  * JPEG at quality 72; the script fails if any file is 300 KB or more. hero-before-*.jpg (the
  * A2 hero, kept for the before/after pair) are never deleted; hero-after-*.jpg are rewritten.
  */
@@ -21,7 +22,10 @@ for (const f of readdirSync(out))
   if (
     /\.(jpe?g|png)$/.test(f) &&
     !f.startsWith('hero-before-') &&
-    (only === undefined || f.startsWith(only))
+    (only === undefined ||
+      (only === 'app-reply'
+        ? f.startsWith('app-options-') || f.startsWith('app-draft-')
+        : f.startsWith(only)))
   )
     rmSync(join(out, f));
 
@@ -65,13 +69,51 @@ const readerShot = async (width: number) => {
   await ctx.close();
 };
 
+/**
+ * Options (S5) and the draft (S6): a deal with no quote (your price is the opening), and a
+ * made-up client message (not gold) that names a number between the target and the opening.
+ */
+const replyShots = async (width: number) => {
+  const ctx = await browser.newContext({
+    viewport: { width, height: heightOf(width) },
+    deviceScaleFactor: 1,
+  });
+  const p = await ctx.newPage();
+  await p.goto(APP);
+  await p.getByRole('button', { name: 'Start my deal' }).click();
+  await p.getByLabel('How long will this project take?').fill('7');
+  await p.getByLabel('How many days can you bill in a month?').fill('18');
+  await p.getByLabel('What do you need to earn in a month?').fill('90000');
+  await p.getByLabel('Direct costs for this work').fill('3000');
+  await p.getByRole('button', { name: 'Calculate my ladder' }).click();
+  await p.getByRole('heading', { name: 'Your price ladder' }).waitFor();
+  await p.getByRole('button', { name: 'Read their reply' }).click();
+  await p.getByLabel('Paste what your client said').fill('Budget is tight. Can you do 47k?');
+  await p.getByRole('radio', { name: 'Yes', exact: true }).check({ force: true });
+  await p.getByRole('button', { name: 'Read it' }).click();
+  await p.getByRole('button', { name: 'See your options for this reply' }).click();
+  await p.getByRole('heading', { name: 'Your options' }).waitFor();
+  await p.mouse.move(0, 0);
+  await shot(p, `app-options-${width}`, true);
+  await p.getByRole('button', { name: 'Draft this reply' }).first().click();
+  await p.getByRole('heading', { name: 'Draft your reply' }).waitFor();
+  await p.mouse.move(0, 0);
+  await shot(p, `app-draft-${width}`, true);
+  await ctx.close();
+};
+
 for (const width of widths) {
   const viewport = { width, height: heightOf(width) };
   if (only === 'app-reader') {
     await readerShot(width);
     continue;
   }
+  if (only === 'app-reply') {
+    await replyShots(width);
+    continue;
+  }
   await readerShot(width);
+  await replyShots(width);
 
   // App: welcome, setup (with a validation error), ladder (example + quote), evidence, settings
   const a = await browser.newContext({ viewport, deviceScaleFactor: 1 });

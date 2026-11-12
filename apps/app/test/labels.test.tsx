@@ -117,6 +117,101 @@ describe('no unlabelled number can render (S7)', () => {
     expect(unlabelledDigits(container)).toEqual([]);
   });
 
+  // one test per made-up message (not gold), so each walk-through stays well inside the timeout
+  const replyTotals = { trades: 0, drafts: 0 };
+  it.each([
+    'Budget is tight, can you do 47k?',
+    'Too high bhai, 40 hazaar max',
+    'Can you do 30k?',
+    'Kitne din lagenge?',
+    'asdf qwer',
+  ])(
+    'options (S5) and drafts (S6) for "%s": every option, every draft, scope, trade share, a failed check',
+    async (text) => {
+      const { container } = render(<App />);
+      // a deal with no quote: your price is the opening, so trades and steps appear
+      fireEvent.click(screen.getByRole('button', { name: 'Start my deal' }));
+      fireEvent.change(await screen.findByLabelText('How long will this project take?'), {
+        target: { value: '7' },
+      });
+      fireEvent.change(screen.getByLabelText('How many days can you bill in a month?'), {
+        target: { value: '18' },
+      });
+      fireEvent.change(screen.getByLabelText('What do you need to earn in a month?'), {
+        target: { value: '90000' },
+      });
+      fireEvent.change(screen.getByLabelText('Direct costs for this work'), {
+        target: { value: '3000' },
+      });
+      fireEvent.click(screen.getByRole('button', { name: 'Calculate my ladder' }));
+      await screen.findByRole('heading', { name: 'Your price ladder' });
+      fireEvent.click(screen.getByRole('button', { name: 'Read their reply' }));
+      let drafts = 0;
+      {
+        fireEvent.change(screen.getByLabelText('Paste what your client said'), {
+          target: { value: text },
+        });
+        fireEvent.click(screen.getByRole('button', { name: 'Read it' }));
+        await screen.findByRole('heading', { name: 'What the rules read' });
+        expect(unlabelledDigits(container)).toEqual([]);
+        fireEvent.click(screen.getByRole('button', { name: 'See your options for this reply' }));
+        await screen.findByRole('heading', { name: 'Your options' });
+        expect(unlabelledDigits(container)).toEqual([]);
+        const effort = screen.queryByLabelText('How many days would the smaller job take?');
+        if (effort) {
+          fireEvent.change(effort, { target: { value: '99' } }); // an error state
+          expect(unlabelledDigits(container)).toEqual([]);
+          fireEvent.change(effort, { target: { value: '5' } });
+          expect(unlabelledDigits(container)).toEqual([]);
+        }
+        const n = screen.getAllByRole('button', { name: 'Draft this reply' }).length;
+        for (let i = 0; i < n; i++) {
+          const b = screen.getAllByRole('button', { name: 'Draft this reply' })[
+            i
+          ] as HTMLButtonElement;
+          if (b.disabled) continue;
+          fireEvent.click(b);
+          await screen.findByRole('heading', { name: 'Draft your reply' });
+          expect(unlabelledDigits(container)).toEqual([]);
+          const advance = screen.queryByRole('combobox', { name: 'What you ask back' });
+          drafts++;
+          replyTotals.drafts++;
+          if (advance) {
+            replyTotals.trades++;
+            fireEvent.change(advance, { target: { value: 'ADVANCE' } });
+            fireEvent.click(screen.getByRole('radio', { name: '25%' }));
+            expect(unlabelledDigits(container)).toEqual([]);
+          }
+          fireEvent.change(screen.getByLabelText('Your draft'), {
+            target: { value: 'Or 42k, plus 18% GST, by the 15th.' },
+          });
+          expect(container.querySelector('.draft-fail')).not.toBeNull();
+          expect(unlabelledDigits(container)).toEqual([]);
+          fireEvent.click(screen.getByRole('button', { name: 'Back to your options' }));
+          await screen.findByRole('heading', { name: 'Your options' });
+        }
+        fireEvent.click(
+          screen.getByRole('button', { name: 'None of these? Write your own reply' }),
+        );
+        await screen.findByRole('heading', { name: 'Draft your reply' });
+        expect(unlabelledDigits(container)).toEqual([]);
+        fireEvent.click(screen.getByRole('button', { name: 'Back to your options' }));
+        fireEvent.click(await screen.findByRole('button', { name: 'Back to their reply' }));
+        await screen.findByRole('heading', { name: 'Read your client’s reply' });
+      }
+      // the saved draft entry on the ladder screen
+      fireEvent.click(screen.getByRole('button', { name: 'Back' }));
+      await screen.findByRole('heading', { name: 'Your price ladder' });
+      if (drafts > 0) expect(container.textContent).toContain('Your saved draft');
+      expect(unlabelledDigits(container)).toEqual([]);
+    },
+  );
+
+  it('the S5/S6 walk-throughs above reached trades and at least 8 drafts', () => {
+    expect(replyTotals.trades).toBeGreaterThan(0);
+    expect(replyTotals.drafts).toBeGreaterThanOrEqual(8);
+  });
+
   it('the checker itself catches each kind of violation', () => {
     const div = document.createElement('div');
     div.innerHTML = [
