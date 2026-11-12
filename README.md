@@ -8,15 +8,16 @@ MolBhav is a solo student project in active development. Built so far: Phase A (
 
 [EVIDENCE: docs/product/09_architecture.md §2]
 
-| Path                | What                                                                                                                                                                                                                        |
-| ------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `apps/app`          | Vite + React + TypeScript PWA. Deals are stored in IndexedDB on the device [EVIDENCE: apps/app/e2e/privacy.spec.ts].                                                                                                        |
-| `apps/site`         | Astro showcase. One React Three Fiber island (the hero ladder) that replaces a static poster only after the first interaction; text and numbers are plain HTML [EVIDENCE: apps/site/e2e/hero.spec.ts].                      |
-| `packages/engine`   | Price ladder engine. Exact BigInt rationals, no floating point on money [EVIDENCE: packages/engine/test/units.test.ts].                                                                                                     |
-| `packages/analyser` | Message analyser (S4b): amount parser (exact bigint rupees, or marked ambiguous) and rule baseline, run in a Web Worker on the device [EVIDENCE: packages/analyser/test/worker.test.ts].                                    |
-| `packages/gold`     | Gold-set toolchain (S4a): schemas, seeded prompt cards, local writing and blind-labelling tools, split-and-freeze, metrics [EVIDENCE: docs/product/04_research_integrity.md §2].                                            |
-| `packages/tokens`   | Design tokens v1.0, LOCKED (colour, glass, type, spacing, motion) as TypeScript and generated CSS [EVIDENCE: docs/product/15_design_language.md].                                                                           |
-| `ml/`               | Dataset audit scripts (Python). `ml/gold/` holds the labelling guidelines, schemas, prompt cards and the eval-report stub. Raw datasets are never committed; gold messages stay local (gitignored) until the owner decides. |
+| Path                | What                                                                                                                                                                                                                                                        |
+| ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `apps/app`          | Vite + React + TypeScript PWA. Deals and saved reply drafts are stored in IndexedDB on the device [EVIDENCE: apps/app/e2e/privacy.spec.ts].                                                                                                                 |
+| `apps/site`         | Astro showcase. One React Three Fiber island (the hero ladder) that replaces a static poster only after the first interaction; text and numbers are plain HTML [EVIDENCE: apps/site/e2e/hero.spec.ts].                                                      |
+| `packages/engine`   | Price ladder engine. Exact BigInt rationals, no floating point on money [EVIDENCE: packages/engine/test/units.test.ts].                                                                                                                                     |
+| `packages/analyser` | Message analyser (S4b): amount parser (exact bigint rupees, or marked ambiguous) and rule baseline, run in a Web Worker on the device [EVIDENCE: packages/analyser/test/worker.test.ts].                                                                    |
+| `packages/planner`  | Reply planner (S5) and draft templates (S6): the decision table in docs/product/18_planner_rules.md, English and Roman Hinglish templates, and `checkDraft`, the number post-check that fails closed [EVIDENCE: packages/planner/test/adversarial.test.ts]. |
+| `packages/gold`     | Gold-set toolchain (S4a): schemas, seeded prompt cards, local writing and blind-labelling tools, split-and-freeze, metrics [EVIDENCE: docs/product/04_research_integrity.md §2].                                                                            |
+| `packages/tokens`   | Design tokens v1.0, LOCKED (colour, glass, type, spacing, motion) as TypeScript and generated CSS [EVIDENCE: docs/product/15_design_language.md].                                                                                                           |
+| `ml/`               | Dataset audit scripts (Python). `ml/gold/` holds the labelling guidelines, schemas, prompt cards and the eval-report stub. Raw datasets are never committed; gold messages stay local (gitignored) until the owner decides.                                 |
 
 ## Run
 
@@ -28,6 +29,8 @@ npm run dev          # the app, at http://localhost:5173
 npm run dev:site     # the showcase, at http://localhost:4321
 ```
 
+The owner's review list for every C1 wording (templates, options, reasons, screen copy) is docs/product/17_c1_review_checklist.md. After changing any of that wording, regenerate it with `node apps/app/scripts/review-checklist.ts`; the app's unit test fails while it is out of date.
+
 The design is locked (docs/product/15_design_language.md §10). Changing `packages/tokens/src/index.ts` needs a new dated changelog row there with the new hash, a `designVersion` bump and `npm run build:css -w packages/tokens`; otherwise `npm test` fails.
 
 ## Test
@@ -37,6 +40,7 @@ npm run lint && npm run format:check && npm run typecheck
 npm test             # engine, analyser, gold-tool, tokens, site and app unit tests, including property tests
 npm run test:hand    # hand-verified examples (packages/engine/test/hand_verified.json)
 npm run test:e2e     # Playwright: app (privacy, delete-all, keyboard, axe) then site (poster first, 3D after first interaction, fallbacks, axe, keyboard, privacy, budget)
+npm run report:adversarial -w @molbhav/planner   # the A5 adversarial set: cases and results by category (0 invented numbers may pass)
 npm run test:budget  # the site performance budget, 5 runs; min/median/max in apps/site/.budget/report.json; also reports how closely the poster matches the first live frame (report-only)
 ```
 
@@ -46,7 +50,7 @@ To run e2e the way CI does, on this machine: `npx playwright install chromium` o
 
 The budget check measures the built site through a gzip static server under a throttled mobile profile (360 px, 150 ms RTT, 1.6 Mbps, 4× CPU). That is a lab proxy, not a real phone. Budgets live in `apps/site/budgets.ts` [EVIDENCE: docs/product/08_experience_and_brand.md §8.3].
 
-Review screenshots (app: welcome, setup, ladder, evidence, settings; site: hero poster, hero live, ladder story, pillars, how it works, the real app, trust band, footer, and hero before/after pairs for A2.1; 360, 768 and 1280 px) are in `docs/product/screens/`. Regenerate them with `node apps/site/scripts/screens.ts` while both previews run (add `--only app-reader` for just the reader screen; it needs only the app preview). The showcase's product shot (`apps/site/public/product/app-ladder.webp`) is a screenshot of the real app with its made-up example deal; it is not made by the build.
+Review screenshots (app: welcome, setup, ladder, evidence, settings, reader, options, draft; site: hero poster, hero live, ladder story, pillars, how it works, the real app, trust band, footer, and hero before/after pairs for A2.1; 360, 768 and 1280 px) are in `docs/product/screens/`. Regenerate them with `node apps/site/scripts/screens.ts` while both previews run (add `--only app-reader` for just the reader screen, or `--only app-reply` for the options and draft screens; these need only the app preview). The showcase's product shot (`apps/site/public/product/app-ladder.webp`) is a screenshot of the real app with its made-up example deal; it is not made by the build.
 
 **Re-run `npm run shots:product` whenever the app's ladder screen changes.** It builds the app, serves it locally, retakes the shot and records which source it came from; the site's unit test fails while the shot is older than the ladder screen's source files [EVIDENCE: apps/site/test/product-shot.test.ts].
 

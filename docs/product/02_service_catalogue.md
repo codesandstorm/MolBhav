@@ -37,6 +37,19 @@ Claim labels used by every service: **FACT** (sourced) · **CALCULATION** (engin
   - The confidence threshold (0.5) and the rule weights are first guesses [HYPOTHESIS], to be tuned on dev only.
 - Hours were not timed, so the effort column is unchanged.
 
+**Build status, C1 (2026-11-11).** C1 is the on-device half of Phase C: S5 and S6 with templates only, no LLM.
+- **S5**: `packages/planner` turns the ladder, the deal state and the reader's confirmed move into ranked options from the decision table in [18_planner_rules.md](18_planner_rules.md) [EVIDENCE: packages/planner/src/plan.ts].
+  - Every option shows its figures (CALCULATION), the reason (RECOMMENDATION), the risk, and what it asks back.
+  - No suggested price is below the floor; the floor is shown to the user only and never enters a draft. Property tests check this over 2,500 random plans per rule [EVIDENCE: packages/planner/test/properties.test.ts].
+  - The "Your options" screen is reached from the reader [EVIDENCE: apps/app/src/screens/Options.tsx].
+- **S6**: fixed templates in English and Roman Hinglish, polite and firm (44 templates), filled only with engine numbers [EVIDENCE: packages/planner/src/templates.ts].
+  - S6 receives a `DraftRequest` with no free-text field; the client's message never reaches it (a type test and a unit test) [EVIDENCE: packages/planner/test/draft.test.ts].
+  - The user can edit the draft. `checkDraft` re-checks every edit and fails closed; "All numbers in this draft come from your ladder" shows only when the check passed [EVIDENCE: apps/app/src/screens/Draft.tsx].
+  - The adversarial set: 404 cases, 0 invented numbers passed (04 §3, A5).
+  - The LLM path is **not built**: no toggle, only a documented extension point (09 §4). It is C2.
+  - The saved draft is kept in IndexedDB with the deal and removed by delete-all; the client's message is never stored [EVIDENCE: apps/app/e2e/privacy.spec.ts].
+- All template and option wording is [HYPOTHESIS], listed for review in [17_c1_review_checklist.md](17_c1_review_checklist.md).
+
 **V1 total ≈ 109 h of services** across Phases A–D (A 22 · B1 34 · B2 16 · C 24 · D 13; 2026-11-11: B2 now = on-device learned model + hing-bert research comparison), plus UI/demo polish per phase (see 03) [HYPOTHESIS].
 
 ## Where does message analysis run? (D10, APPROVED 2026-11-10: option (a) by default, (b) opt-in only if B2 wins)
